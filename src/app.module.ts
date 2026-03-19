@@ -4,6 +4,7 @@ import { User } from './users/entities/user.entity';
 import { RolsModule } from './rols/rols.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AlimentosModule } from './alimentos/alimentos.module';
 
 
 @Module({
@@ -21,6 +22,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
     UsersModule,
     RolsModule,
+    AlimentosModule,
   ],
   controllers: [],
   providers: [],
