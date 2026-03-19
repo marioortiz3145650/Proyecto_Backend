@@ -12,25 +12,25 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(Rol)  // ✅ Inyectar repositorio de Rol
+    @InjectRepository(Rol)  
     private rolRepository: Repository<Rol>,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    // ✅ Verificar que el rol existe
+    //  Verificar que el rol existe
     const rol = await this.rolRepository.findOneBy({ id: createUserDto.rol });
     if (!rol) {
       throw new NotFoundException(`Rol con ID ${createUserDto.rol} no encontrado`);
     }
 
-    // ✅ Hashear contraseña
+    //  Hashear contraseña
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
     
-    // ✅ Crear usuario con relación correcta
+    //  Crear usuario
     const user = this.userRepository.create({
       ...createUserDto,
       password_hash: hashedPassword,
-      rol: rol,  // ✅ Pasar el objeto Rol, no solo el ID
+      rol: rol,  //  Objeto completo
     });
 
     return this.userRepository.save(user);
@@ -42,7 +42,6 @@ export class UsersService {
       select: ['id', 'name', 'email', 'username', 'rol', 'activo', 'fecha_registro']
     });
   }
-
 
   async findAll() {
     return this.userRepository.find({
@@ -66,17 +65,41 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto) {
     await this.findOne(id);
 
-    if (updateUserDto.password) {
-      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
-      
-      await this.userRepository.update(id, {
-        ...UpdateUserDto,
-        password_hash: hashedPassword,
-      });
-    } else {
-      await this.userRepository.update(id, UpdateUserDto);
+    //  Preparar datos de actualización
+    const updateData: Partial<User> = {};
+
+  
+    if (updateUserDto.name !== undefined) {
+      updateData.name = updateUserDto.name;
     }
 
+    if (updateUserDto.email !== undefined) {
+      updateData.email = updateUserDto.email;
+    }
+
+    if (updateUserDto.username !== undefined) {
+      updateData.username = updateUserDto.username;
+    }
+
+    if (updateUserDto.activo !== undefined) {
+      updateData.activo = updateUserDto.activo;
+    }
+
+    //  Si viene password, hashearla
+    if (updateUserDto.password) {
+      updateData.password_hash = await bcrypt.hash(updateUserDto.password, 10);
+    }
+
+    //  Si viene rol, verificar que existe
+    if (updateUserDto.rol) {
+      const rol = await this.rolRepository.findOneBy({ id: updateUserDto.rol });
+      if (!rol) {
+        throw new NotFoundException(`Rol con ID ${updateUserDto.rol} no encontrado`);
+      }
+      updateData.rol = rol;  //  Objeto completo
+    }
+
+    await this.userRepository.update({ id }, updateData);
     return this.findOne(id);
   }
 
