@@ -5,6 +5,7 @@ import { RolsModule } from './rols/rols.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AlimentosModule } from './alimentos/alimentos.module';
+import { UnidadesDeMedidaModule } from './unidades_de_medida/unidades_de_medida.module';
 
 
 @Module({
@@ -23,6 +24,7 @@ import { AlimentosModule } from './alimentos/alimentos.module';
     UsersModule,
     RolsModule,
     AlimentosModule,
+    UnidadesDeMedidaModule,
   ],
   controllers: [],
   providers: [],
