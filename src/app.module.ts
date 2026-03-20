@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { UsersModule } from './users/users.module';
-import { User } from './users/entities/user.entity';
 import { RolsModule } from './rols/rols.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BreedModule } from './breed/breed.module';
+import { LotesModule } from './lotes/lotes.module';
+import { GalponesModule } from './galpones/galpones.module';
 
 
 @Module({
@@ -21,6 +23,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
     UsersModule,
     RolsModule,
+    BreedModule,
+    LotesModule,
+    GalponesModule,
   ],
   controllers: [],
   providers: [],

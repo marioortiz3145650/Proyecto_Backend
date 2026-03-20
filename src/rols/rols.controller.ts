@@ -1,4 +1,3 @@
-// src/roles/roles.controller.ts
 import { 
   Controller, 
   Get, 
@@ -39,6 +38,7 @@ export class RolsController {
     return this.rolesService.update(id, updateRolDto);
   }
 
+  
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   remove(@Param('id', ParseUUIDPipe) id: string) {
