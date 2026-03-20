@@ -6,6 +6,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BreedModule } from './breed/breed.module';
 import { LotesModule } from './lotes/lotes.module';
 import { GalponesModule } from './galpones/galpones.module';
+import { AlimentosModule } from './alimentos/alimentos.module';
+import { UnidadesDeMedidaModule } from './unidades_de_medida/unidades_de_medida.module';
+import { TipoDeAlimentosModule } from './tipo_de_alimento/tipo_de_alimento.module';
 
 
 @Module({
@@ -26,6 +29,9 @@ import { GalponesModule } from './galpones/galpones.module';
     BreedModule,
     LotesModule,
     GalponesModule,
+    AlimentosModule,
+    UnidadesDeMedidaModule,
+    TipoDeAlimentosModule,
   ],
   controllers: [],
   providers: [],
