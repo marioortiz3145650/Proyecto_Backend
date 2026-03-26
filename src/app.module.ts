@@ -10,6 +10,7 @@ import { AlimentosModule } from './alimentos/alimentos.module';
 import { UnidadesDeMedidaModule } from './unidades_de_medida/unidades_de_medida.module';
 import { TipoDeAlimentosModule } from './tipo_de_alimento/tipo_de_alimento.module';
 import { ProduccionModule } from './produccion/produccion.module';
+import { EstadosModule } from './estados/estados.module';
 
 
 @Module({
@@ -34,6 +35,7 @@ import { ProduccionModule } from './produccion/produccion.module';
     UnidadesDeMedidaModule,
     TipoDeAlimentosModule,
     ProduccionModule,
+    EstadosModule,
   ],
   controllers: [],
   providers: [],
