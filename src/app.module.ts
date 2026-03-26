@@ -9,6 +9,7 @@ import { GalponesModule } from './galpones/galpones.module';
 import { AlimentosModule } from './alimentos/alimentos.module';
 import { UnidadesDeMedidaModule } from './unidades_de_medida/unidades_de_medida.module';
 import { TipoDeAlimentosModule } from './tipo_de_alimento/tipo_de_alimento.module';
+import { ProduccionModule } from './produccion/produccion.module';
 
 
 @Module({
@@ -32,6 +33,7 @@ import { TipoDeAlimentosModule } from './tipo_de_alimento/tipo_de_alimento.modul
     AlimentosModule,
     UnidadesDeMedidaModule,
     TipoDeAlimentosModule,
+    ProduccionModule,
   ],
   controllers: [],
   providers: [],
