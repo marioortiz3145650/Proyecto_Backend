@@ -11,6 +11,7 @@ import { UnidadesDeMedidaModule } from './unidades_de_medida/unidades_de_medida.
 import { TipoDeAlimentosModule } from './tipo_de_alimento/tipo_de_alimento.module';
 import { ProduccionModule } from './produccion/produccion.module';
 import { EstadosModule } from './estados/estados.module';
+import { MovimientosInsumoModule } from './movimientos_insumo/movimientos_insumo.module';
 
 
 @Module({
@@ -36,6 +37,7 @@ import { EstadosModule } from './estados/estados.module';
     TipoDeAlimentosModule,
     ProduccionModule,
     EstadosModule,
+    MovimientosInsumoModule,
   ],
   controllers: [],
   providers: [],
