@@ -7,7 +7,7 @@ import {
   OneToMany,
   CreateDateColumn 
 } from 'typeorm';
-import { Breed } from '../../breed/entities/breed.entity';
+import { Breed } from '../../raza/entities/breed.entity';
 import { Galpon } from '../../galpones/entities/galpone.entity';
 
 @Entity('lotes')
