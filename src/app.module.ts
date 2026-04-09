@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { UsersModule } from './users/users.module';
-import { RolsModule } from './rols/rols.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { BreedModule } from './breed/breed.module';
+import { UsersModule } from './usuarios/users.module';
+import { RolsModule } from './roles/rols.module';
+import { BreedModule } from './raza/breed.module';
 import { LotesModule } from './lotes/lotes.module';
 import { GalponesModule } from './galpones/galpones.module';
 import { AlimentosModule } from './alimentos/alimentos.module';
