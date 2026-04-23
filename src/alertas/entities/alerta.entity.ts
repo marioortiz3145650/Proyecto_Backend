@@ -5,13 +5,13 @@ import { Galpon } from '../../galpones/entities/galpone.entity';
 @Entity('alertas')
 export class Alerta {
   @PrimaryGeneratedColumn({ name: 'id_alerta' })
-  id_alerta: number;
+  id_alerta!: number;
 
   @Column()
-  titulo: string;
+  titulo!: string;
 
   @Column({ type: 'text' })
-  mensaje: string;
+  mensaje!: string;
 
   @Column()
   tipo!: string;
