@@ -12,6 +12,7 @@ import { TipoDeAlimentosModule } from './tipo_de_alimento/tipo_de_alimento.modul
 import { ProduccionModule } from './produccion/produccion.module';
 import { EstadosModule } from './estados/estados.module';
 import { MovimientosInsumoModule } from './movimientos_insumo/movimientos_insumo.module';
+import { AlertasModule } from './alertas/alertas.module';
 
 
 @Module({
@@ -38,6 +39,7 @@ import { MovimientosInsumoModule } from './movimientos_insumo/movimientos_insumo
     ProduccionModule,
     EstadosModule,
     MovimientosInsumoModule,
+    AlertasModule,
   ],
   controllers: [],
   providers: [],
