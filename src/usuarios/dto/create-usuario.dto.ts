@@ -1,32 +1,32 @@
 import { IsString, IsEmail, MinLength, MaxLength, IsNotEmpty, IsUUID, IsOptional } from "class-validator";
 
-export class CreateUserDto {
+export class CreateUsuarioDto {
   @IsString()
   @MinLength(3)
   @MaxLength(100)
   @IsNotEmpty()
-  name: string;
+  nombre!: string;
 
   @IsString()
   @IsEmail()
   @MinLength(5)
   @MaxLength(100)
   @IsNotEmpty()  
-  email: string;
+  correo!: string;
 
   @IsString()
   @MinLength(3)
   @MaxLength(50)
   @IsNotEmpty()
-  username: string;
+  nombre_usuario!: string;
 
   @IsString()
   @MinLength(6)
   @MaxLength(100)
   @IsNotEmpty()
-  password: string;
+  contraseña!: string;
 
   @IsUUID('4', { message: 'El rol debe ser un UUID válido' })
   @IsNotEmpty({ message: 'El rol es requerido' })
-  rol: string;  
+  rol!: string;  
 }

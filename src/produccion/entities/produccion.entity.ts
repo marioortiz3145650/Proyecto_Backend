@@ -6,49 +6,49 @@ import {
   JoinColumn, 
   CreateDateColumn 
 } from 'typeorm';
-import { User } from '../../usuarios/entities/user.entity';
+import { User } from '../../usuarios/entities/usuario.entity';
 import { Lote } from '../../lotes/entities/lote.entity';
 
 @Entity('produccion')
 export class Produccion {
   @PrimaryGeneratedColumn()
-  id_produccion: number;
+  id_produccion!: number;
 
   @Column({ type: 'date' })
-  fecha: Date;
+  fecha!: Date;
 
   // Categorías de huevos
   @Column({ type: 'int', default: 0 })
-  jumbo: number;
+  jumbo!: number;
 
   @Column({ type: 'int', default: 0 })
-  aaa: number;
+  aaa!: number;
 
   @Column({ type: 'int', default: 0 })
-  aa: number;
+  aa!: number;
 
   @Column({ type: 'int', default: 0 })
-  a: number;
+  a!: number;
 
   @Column({ type: 'int', default: 0 })
-  b: number;
+  b!: number;
 
   @Column({ type: 'int', default: 0 })
-  c: number;
+  c!: number;
 
   @Column({ type: 'int', default: 0 })
-  total: number;
+  total!: number;
 
   // Relación con Lote (usando el number que vimos en tu entity)
   @ManyToOne(() => Lote, { eager: true })
   @JoinColumn({ name: 'lote_id' })
-  lote: Lote;
+  lote!: Lote;
 
   // Relación con Usuario (usando el UUID que vimos antes)
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'creado_por' })
-  creado_por: User;
+  creado_por!: User;
 
   @CreateDateColumn({ name: 'fecha_registro' })
-  fecha_registro: Date;
+  fecha_registro!: Date;
 }

@@ -6,25 +6,25 @@ import { TipoDeAlimento } from 'src/tipo_de_alimento/entities/tipo_de_alimento.e
 export class Alimento {
 
   @PrimaryGeneratedColumn({ name: 'id_insumo' })
-  id_insumo: number;
+  id_insumo!: number;
 
   @Column({ type: 'varchar', length: 100 })
-  nombre: string;
+  nombre!: string;
 
   @ManyToOne(() => TipoDeAlimento)
   @JoinColumn({ name: 'tipo_alimento_id' })
-  tipo_alimento: TipoDeAlimento;
+  tipo_alimento!: TipoDeAlimento;
 
   @ManyToOne(() => UnidadMedida)
   @JoinColumn({ name: 'unidad_medida_id' })
-  unidad_medida: UnidadMedida;
+  unidad_medida!: UnidadMedida;
 
   @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
-  stock_actual: number;
+  stock_actual!: number;
 
   @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
-  stock_minimo: number;
+  stock_minimo!: number;
 
   @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
-  precio_unitario: number;
+  precio_unitario!: number;
 }

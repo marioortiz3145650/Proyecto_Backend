@@ -4,8 +4,8 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 export class Estado {
 
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  nombre: string;
+  nombre!: string;
 }

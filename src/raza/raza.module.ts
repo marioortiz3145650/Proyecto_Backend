@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Breed } from './entities/breed.entity';
-import { BreedService } from './breed.service';
-import { BreedController } from './breed.controller';
+import { Breed } from './entities/raza.entity';
+import { BreedService } from './raza.service';
+import { BreedController } from './raza.controller';
 
 @Module({
   controllers: [BreedController],
