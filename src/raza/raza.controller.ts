@@ -11,9 +11,9 @@ import {
   HttpCode,
   HttpStatus
 } from '@nestjs/common';
-import { BreedService } from './breed.service';
-import { CreateBreedDto } from './dto/create-breed.dto';
-import { UpdateBreedDto } from './dto/update-breed.dto';
+import { BreedService } from './raza.service';
+import { CreateBreedDto } from './dto/create-raza.dto';
+import { UpdateBreedDto } from './dto/update-raza.dto';
 
 @Controller('breed')
 export class BreedController {

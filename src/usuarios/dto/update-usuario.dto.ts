@@ -1,9 +1,8 @@
-// src/users/dto/update-user.dto.ts
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateUserDto } from './create-user.dto';
+import { CreateUsuarioDto } from './create-usuario.dto';
 import { IsBoolean, IsOptional, IsUUID } from 'class-validator';
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {
+export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
   @IsBoolean()
   @IsOptional()
   activo?: boolean;

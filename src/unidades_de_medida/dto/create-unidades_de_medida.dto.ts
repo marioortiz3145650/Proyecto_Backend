@@ -3,8 +3,8 @@ import { IsString } from 'class-validator';
 export class CreateUnidadesDeMedidaDto {
 
   @IsString()
-  nombre: string;
+  nombre!: string;
 
   @IsString()
-  abreviatura: string;
+  abreviatura!: string;
 }

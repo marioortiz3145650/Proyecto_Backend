@@ -11,12 +11,12 @@ export class CreateGalponDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
-  nombre: string;
+  nombre!: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  direccion: string;
+  direccion!: string;
 
   @IsInt()
   @Min(1)

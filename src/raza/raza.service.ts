@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Breed } from './entities/breed.entity';
-import { CreateBreedDto } from './dto/create-breed.dto';
-import { UpdateBreedDto } from './dto/update-breed.dto';
+import { Breed } from './entities/raza.entity';
+import { CreateBreedDto } from './dto/create-raza.dto';
+import { UpdateBreedDto } from './dto/update-raza.dto';
 
 @Injectable()
 export class BreedService {
