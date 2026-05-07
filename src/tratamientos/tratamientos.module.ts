@@ -10,4 +10,4 @@ import { Tratamiento } from './entities/tratamiento.entity'; // <-- AGREGA ESTA 
   providers: [TratamientosService],
   exports: [TypeOrmModule], // Opcional: por si necesitas usar el repositorio fuera
 })
-export class TratamientosModule {}
+export class TratamientosModule {} 

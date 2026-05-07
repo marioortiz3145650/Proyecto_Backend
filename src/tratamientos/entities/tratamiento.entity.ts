@@ -3,21 +3,21 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeor
 @Entity('tratamientos')
 export class Tratamiento {
   @PrimaryGeneratedColumn()
-  id_tratamiento: number;
+  id_tratamiento!: number;
 
   @Column({ type: 'date' })
-  fecha: Date;
+  fecha!: Date;
 
   @Column()
-  tratamiento: string;
+  tratamiento!: string;
 
   // Relaciones (Solo los IDs por ahora para no complicar el Git)
   @Column()
-  lote_id: number;
+  lote_id!: number;
 
   @Column()
-  estado_id: number;
+  estado_id!: number;
 
   @Column()
-  creado_por: number;
-}
+  creado_por!: number;
+} 

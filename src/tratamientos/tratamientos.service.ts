@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateTratamientoDto } from './dto/create-tratamiento.dto';
@@ -40,5 +41,6 @@ export class TratamientosService {
   async remove(id: number) {
     const registro = await this.findOne(id);
     return await this.repo.remove(registro);
-  }
-}
+  } 
+
+} 

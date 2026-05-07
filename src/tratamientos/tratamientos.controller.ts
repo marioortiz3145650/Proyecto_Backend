@@ -32,3 +32,4 @@ export class TratamientosController {
     return this.tratamientosService.remove(+id);
   }
 }
+ 
