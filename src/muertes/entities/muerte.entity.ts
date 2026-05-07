@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Lote } from '../../lotes/entities/lote.entity';
 import { User } from 'src/usuarios/entities/usuario.entity';
+import { Inquilino } from '../../inquilinos/entities/inquilino.entity';
 
 @Entity('muertes')
 export class Muerte {
@@ -30,4 +31,8 @@ export class Muerte {
   @ManyToOne(() => Lote)
   @JoinColumn({ name: 'lote_id' })
   lote!: Lote;
+
+  @ManyToOne(() => Inquilino)
+  @JoinColumn({ name: 'inquilino_id' })
+  inquilino!: Inquilino;
 }

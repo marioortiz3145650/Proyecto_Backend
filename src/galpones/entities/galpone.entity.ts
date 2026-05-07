@@ -7,6 +7,7 @@ import {
   CreateDateColumn 
 } from 'typeorm';
 import { Lote } from '../../lotes/entities/lote.entity';
+import { Inquilino } from '../../inquilinos/entities/inquilino.entity';
 
 @Entity('galpones')
 export class Galpon {
@@ -22,6 +23,10 @@ export class Galpon {
   @ManyToOne(() => Lote, { eager: true, nullable: true })
   @JoinColumn({ name: 'lote_id' })
   lote!: Lote;
+
+  @ManyToOne(() => Inquilino)
+  @JoinColumn({ name: 'inquilino_id' })
+  inquilino!: Inquilino;
 
   @CreateDateColumn({ name: 'fecha_creacion' })
   fecha_creacion!: Date;

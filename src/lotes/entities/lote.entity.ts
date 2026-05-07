@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Breed } from '../../raza/entities/raza.entity';
 import { Galpon } from '../../galpones/entities/galpone.entity';
+import { Inquilino } from '../../inquilinos/entities/inquilino.entity';
 
 @Entity('lotes')
 export class Lote {
@@ -38,6 +39,10 @@ export class Lote {
 
   @OneToMany(() => Galpon, (galpon) => galpon.lote)
   galpones!: Galpon[];
+
+  @ManyToOne(() => Inquilino)
+  @JoinColumn({ name: 'inquilino_id' })
+  inquilino!: Inquilino;
 
   @CreateDateColumn({ name: 'fecha_creacion' })
   fecha_creacion!: Date;
