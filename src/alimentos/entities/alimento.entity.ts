@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { UnidadMedida } from '../../unidades_de_medida/entities/unidades_de_medida.entity';
 import { TipoDeAlimento } from 'src/tipo_de_alimento/entities/tipo_de_alimento.entity';
+import { Inquilino } from 'src/inquilinos/entities/inquilino.entity';
 
 @Entity('alimento')
 export class Alimento {
@@ -27,4 +28,8 @@ export class Alimento {
 
   @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
   precio_unitario!: number;
+
+  @ManyToOne(() => Inquilino)
+  @JoinColumn({ name: 'inquilino_id' })
+  inquilino!: Inquilino;
 }

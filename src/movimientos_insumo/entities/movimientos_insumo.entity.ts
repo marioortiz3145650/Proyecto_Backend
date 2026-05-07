@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 't
 import { User } from '../../usuarios/entities/usuario.entity';
 import { Lote } from '../../lotes/entities/lote.entity';
 import { Alimento } from '../../alimentos/entities/alimento.entity';
+import { Inquilino } from '../../inquilinos/entities/inquilino.entity';
 
 @Entity('movimientos_insumo')
 export class MovimientosInsumo {
@@ -31,4 +32,8 @@ export class MovimientosInsumo {
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'creado_por' })
   creado_por!: User;
+
+  @ManyToOne(() => Inquilino)
+  @JoinColumn({ name: 'inquilino_id' })
+  inquilino!: Inquilino;
 }

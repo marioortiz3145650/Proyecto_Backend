@@ -14,6 +14,7 @@ import { EstadosModule } from './estados/estados.module';
 import { MovimientosInsumoModule } from './movimientos_insumo/movimientos_insumo.module';
 import { AlertasModule } from './alertas/alertas.module';
 import { MuertesModule } from './muertes/muertes.module';
+import { InquilinosModule } from './inquilinos/inquilinos.module';
 
 
 @Module({
@@ -42,6 +43,7 @@ import { MuertesModule } from './muertes/muertes.module';
     MovimientosInsumoModule,
     AlertasModule,
     MuertesModule,
+    InquilinosModule,
   ],
   controllers: [],
   providers: [],
