@@ -17,7 +17,7 @@ export class CreateLoteDto {
   @IsInt()
   @Min(0)
   @IsNotEmpty()
-  edad_semanas: number;
+  edad_semanas!: number;
 
   @IsDecimal({ decimal_digits: '2' })
   @Min(0)
@@ -27,7 +27,7 @@ export class CreateLoteDto {
 
   @IsDate()
   @IsNotEmpty()
-  fecha_inicio: Date;
+  fecha_inicio!: Date;
 
   @IsDate()
   @IsOptional()

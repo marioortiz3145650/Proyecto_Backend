@@ -13,7 +13,7 @@ export class MovimientosInsumoService {
   ) {}
 
   async create(dto: CreateMovimientosInsumoDto) {
-    // Usamos insert() que es más directo para nuevos registros
+    
     const resultado = await this.repo.insert({
       fecha: new Date(dto.fecha),
       cantidad: dto.cantidad,
@@ -24,12 +24,12 @@ export class MovimientosInsumoService {
       creado_por: { id: dto.creado_por } as any,
     });
 
-    return resultado.identifiers[0]; // Retorna el ID generado
+    return resultado.identifiers[0]; 
   }
 
   async findAll() {
     return await this.repo.find({
-      relations: ['alimento', 'lote', 'creado_por'] // Para que en el GET se vea toda la info
+      relations: ['alimento', 'lote', 'creado_por'] 
     });
   }
 
@@ -43,10 +43,10 @@ export class MovimientosInsumoService {
   }
 
   async update(id: number, updateDto: UpdateMovimientosInsumoDto) {
-    // Buscamos el registro existente
+    
     const movimiento = await this.findOne(id);
     
-    // Fusionamos los cambios del DTO al objeto encontrado
+    
     const actualizado = this.repo.merge(movimiento, updateDto as any);
     
     return await this.repo.save(actualizado);

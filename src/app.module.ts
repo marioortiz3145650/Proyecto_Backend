@@ -1,9 +1,20 @@
 import { Module } from '@nestjs/common';
-import { UsersModule } from './users/users.module';
-import { User } from './users/entities/user.entity';
-import { RolsModule } from './rols/rols.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UsersModule } from './usuarios/usuarios.module';
+import { RolsModule } from './roles/roles.module';
+import { BreedModule } from './raza/raza.module';
+import { LotesModule } from './lotes/lotes.module';
+import { GalponesModule } from './galpones/galpones.module';
+import { AlimentosModule } from './alimentos/alimentos.module';
+import { UnidadesDeMedidaModule } from './unidades_de_medida/unidades_de_medida.module';
+import { TipoDeAlimentosModule } from './tipo_de_alimento/tipo_de_alimento.module';
+import { ProduccionModule } from './produccion/produccion.module';
+import { EstadosModule } from './estados/estados.module';
+import { MovimientosInsumoModule } from './movimientos_insumo/movimientos_insumo.module';
+import { AlertasModule } from './alertas/alertas.module';
+import { MuertesModule } from './muertes/muertes.module';
+import { InquilinosModule } from './inquilinos/inquilinos.module';
 
 
 @Module({
@@ -21,6 +32,18 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
     UsersModule,
     RolsModule,
+    BreedModule,
+    LotesModule,
+    GalponesModule,
+    AlimentosModule,
+    UnidadesDeMedidaModule,
+    TipoDeAlimentosModule,
+    ProduccionModule,
+    EstadosModule,
+    MovimientosInsumoModule,
+    AlertasModule,
+    MuertesModule,
+    InquilinosModule,
   ],
   controllers: [],
   providers: [],

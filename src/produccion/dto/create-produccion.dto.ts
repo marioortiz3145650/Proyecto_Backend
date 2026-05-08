@@ -2,7 +2,7 @@ import { IsDateString, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
 
 export class CreateProduccionDto {
   @IsDateString()
-  fecha: string;
+  fecha!: string;
 
   @IsInt()
   @Min(0)
@@ -37,8 +37,8 @@ export class CreateProduccionDto {
   // El total lo calcularemos en el service, no hace falta pedirlo
   
   @IsInt() // Recuerda que el ID de Lote es un número
-  lote_id: number;
+  lote_id!: number;
 
   @IsUUID() // El ID de usuario es un string (UUID)
-  creado_por: string;
+  creado_por!: string;
 }
