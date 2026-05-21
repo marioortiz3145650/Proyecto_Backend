@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Rol } from 'src/roles/entities/rol.entity';
@@ -114,9 +114,29 @@ export class UsersService {
     return { message: 'Usuario desactivado correctamente' };
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
-    await this.userRepository.delete({ id });
-    return { message: 'Usuario eliminado permanentemente' };
-  }
+    async remove(id: string) {
+        await this.findOne(id);
+        await this.userRepository.delete({ id });
+        return { message: 'Usuario eliminado permanentemente' };
+    }
+
+    async validateUser(username: string, password: string): Promise<any> {
+        const user = await this.userRepository.findOne({
+            where: { nombre_usuario: username },
+            select: ['id', 'nombre', 'correo', 'nombre_usuario', 'contrasena_hash', 'rol', 'activo']
+        });
+        
+        if (!user) {
+            return null;
+        }
+        
+        const isPasswordValid = await bcrypt.compare(password, user.contrasena_hash);
+        if (!isPasswordValid) {
+            return null;
+        }
+        
+        // Remove password from returned user object
+        const { contrasena_hash, ...result } = user;
+        return result;
+    }
 }
