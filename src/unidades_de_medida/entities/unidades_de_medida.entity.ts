@@ -4,11 +4,11 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 export class UnidadMedida {
 
   @PrimaryGeneratedColumn({ name: 'id_unidad' })
-  id_unidad: number;
+  id_unidad!: number;
 
   @Column({ type: 'varchar', length: 100 })
-  nombre: string;
+  nombre!: string;
 
   @Column({ type: 'varchar', length: 20 })
-  abreviatura: string;
+  abreviatura!: string;
 }
