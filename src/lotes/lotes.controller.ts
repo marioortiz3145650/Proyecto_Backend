@@ -6,11 +6,14 @@ import {
   Patch, 
   Param, 
   Delete, 
-  ParseIntPipe 
+  ParseIntPipe,
+  Query 
 } from '@nestjs/common';
 import { LotesService } from './lotes.service';
 import { CreateLoteDto } from './dto/create-lote.dto';
 import { UpdateLoteDto } from './dto/update-lote.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { FilterLoteDto } from './dto/filter-lote.dto';
 
 @Controller('lotes')
 export class LotesController {
@@ -22,8 +25,11 @@ export class LotesController {
   }
 
   @Get()
-  findAll() {
-    return this.lotesService.findAll();
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: FilterLoteDto,
+  ) {
+    return this.lotesService.findAll(paginationDto, filterDto);
   }
 
   @Get(':id')

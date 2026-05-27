@@ -6,11 +6,13 @@ import {
   Patch, 
   Param, 
   Delete, 
-  ParseIntPipe 
+  ParseIntPipe,
+  Query 
 } from '@nestjs/common';
 import { GalponesService } from './galpones.service';
 import { CreateGalponDto } from './dto/create-galpone.dto';
-import { UpdateGalponDto } from './dto/update-galpone.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { FilterGalponDto } from './dto/filter-galpon.dto';
 
 @Controller('galpones')
 export class GalponesController {
@@ -22,8 +24,11 @@ export class GalponesController {
   }
 
   @Get()
-  findAll() {
-    return this.galponesService.findAll();
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: FilterGalponDto,
+  ) {
+    return this.galponesService.findAll(paginationDto, filterDto);
   }
 
   @Get('lote/:loteId')
@@ -37,7 +42,7 @@ export class GalponesController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateGalponDto: UpdateGalponDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateGalponDto: any) {
     return this.galponesService.update(id, updateGalponDto);
   }
 

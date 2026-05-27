@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { AlimentosService } from './alimentos.service';
 import { CreateAlimentoDto } from './dto/create-alimento.dto';
 import { UpdateAlimentoDto } from './dto/update-alimento.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { FilterAlimentoDto } from './dto/filter-alimento.dto';
 
 @Controller('alimentos')
 export class AlimentosController {
@@ -14,8 +16,11 @@ export class AlimentosController {
   }
 
   @Get()
-  findAll() {
-    return this.alimentosService.findAll();
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: FilterAlimentoDto,
+  ) {
+    return this.alimentosService.findAll(paginationDto, filterDto);
   }
 
   @Get(':id')

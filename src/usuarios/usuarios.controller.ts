@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, ParseUUIDPipe, Query } from '@nestjs/common';
 import { UsersService } from './usuarios.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { FilterUsuarioDto } from './dto/filter-usuario.dto';
 
 @Controller('users')
 export class UsersController {
@@ -24,8 +26,11 @@ export class UsersController {
     return this.usersService.activate(id);
   }
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: FilterUsuarioDto,
+  ) {
+    return this.usersService.findAll(paginationDto, filterDto);
   }
 
   @Get(':id')

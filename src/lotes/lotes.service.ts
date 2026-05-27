@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between, MoreThanOrEqual, LessThanOrEqual, Not, IsNull } from 'typeorm';
 import { Lote } from './entities/lote.entity';
 import { Breed } from '../raza/entities/raza.entity';
 import { CreateLoteDto } from './dto/create-lote.dto';
 import { UpdateLoteDto } from './dto/update-lote.dto';
+import { FilterLoteDto } from './dto/filter-lote.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
+import { PaginationUtil } from '../common/utils/pagination.util';
 
 @Injectable()
 export class LotesService {
@@ -46,19 +50,66 @@ async create(createLoteDto: CreateLoteDto) {
   return this.loteRepository.save(lote);
 }
 
-  async findAll() {
-    return this.loteRepository.find({
+  async findAll(
+    paginationDto: PaginationDto,
+    filterDto?: FilterLoteDto,
+  ): Promise<PaginatedResponse<Lote>> {
+    const { page = 1, limit = 10, sortBy = 'id_lote', order = 'DESC' } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (filterDto) {
+      if (filterDto.raza) {
+        where.raza = { id_raza: filterDto.raza };
+      }
+
+      if (filterDto.edad_semanas_min !== undefined && filterDto.edad_semanas_max !== undefined) {
+        where.edad_semanas = Between(filterDto.edad_semanas_min, filterDto.edad_semanas_max);
+      } else if (filterDto.edad_semanas_min !== undefined) {
+        where.edad_semanas = MoreThanOrEqual(filterDto.edad_semanas_min);
+      } else if (filterDto.edad_semanas_max !== undefined) {
+        where.edad_semanas = LessThanOrEqual(filterDto.edad_semanas_max);
+      }
+
+      if (filterDto.produccion_pct_min !== undefined && filterDto.produccion_pct_max !== undefined) {
+        where.produccion_pct = Between(filterDto.produccion_pct_min, filterDto.produccion_pct_max);
+      } else if (filterDto.produccion_pct_min !== undefined) {
+        where.produccion_pct = MoreThanOrEqual(filterDto.produccion_pct_min);
+      } else if (filterDto.produccion_pct_max !== undefined) {
+        where.produccion_pct = LessThanOrEqual(filterDto.produccion_pct_max);
+      }
+
+      if (filterDto.fecha_inicio) {
+        where.fecha_inicio = filterDto.fecha_inicio;
+      }
+
+      if (filterDto.fecha_fin) {
+        where.fecha_fin = filterDto.fecha_fin;
+      }
+
+      // Filtro para lotes activos (sin fecha_fin) o finalizados (con fecha_fin)
+      if (filterDto.activo !== undefined) {
+        if (filterDto.activo) {
+          where.fecha_fin = IsNull(); // Lotes activos
+        } else {
+          where.fecha_fin = Not(IsNull()); // Lotes finalizados
+        }
+      }
+    }
+
+    const validSortFields = ['id_lote', 'edad_semanas', 'produccion_pct', 'fecha_inicio', 'fecha_fin', 'fecha_creacion'];
+    const orderBy = validSortFields.includes(sortBy) ? sortBy : 'id_lote';
+
+    const [data, total] = await this.loteRepository.findAndCount({
+      where,
       relations: ['raza', 'galpones'],
-      select: [
-        'id_lote',
-        'edad_semanas',
-        'produccion_pct',
-        'fecha_inicio',
-        'fecha_fin',
-        'fecha_creacion',
-      ],
-      order: { id_lote: 'DESC' }
+      skip,
+      take: limit,
+      order: { [orderBy]: order },
     });
+
+    return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
   async findOne(id: number) {

@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
 import { MuertesService } from './muertes.service';
 import { CreateMuerteDto } from './dto/create-muerte.dto';
 import { UpdateMuerteDto } from './dto/update-muerte.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { FilterMuerteDto } from './dto/filter-muerte.dto';
 
 @Controller('muertes')
 export class MuertesController {
@@ -14,8 +16,11 @@ export class MuertesController {
   }
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: FilterMuerteDto,
+  ) {
+    return this.service.findAll(paginationDto, filterDto);
   }
 
   @Get(':id')

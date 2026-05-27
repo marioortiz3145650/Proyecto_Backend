@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { Rol } from 'src/roles/entities/rol.entity';
 import { User } from './entities/usuario.entity';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { FilterUsuarioDto } from './dto/filter-usuario.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
+import { PaginationUtil } from '../common/utils/pagination.util';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -43,10 +47,58 @@ export class UsersService {
     });
   }
 
-  async findAll() {
-    return this.userRepository.find({
-      select: ['id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro']
+  async findAll(
+    paginationDto: PaginationDto,
+    filterDto?: FilterUsuarioDto,
+  ): Promise<PaginatedResponse<User>> {
+    const { page = 1, limit = 10, sortBy = 'nombre', order = 'ASC' } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (filterDto) {
+      if (filterDto.nombre) {
+        where.nombre = Like(`%${filterDto.nombre}%`);
+      }
+
+      if (filterDto.correo) {
+        where.correo = Like(`%${filterDto.correo}%`);
+      }
+
+      if (filterDto.nombre_usuario) {
+        where.nombre_usuario = Like(`%${filterDto.nombre_usuario}%`);
+      }
+
+      if (filterDto.rol) {
+        where.rol = { id: filterDto.rol };
+      }
+
+      if (filterDto.activo !== undefined) {
+        where.activo = filterDto.activo;
+      }
+
+      if (filterDto.fecha_registro_inicio && filterDto.fecha_registro_fin) {
+        where.fecha_registro = Between(filterDto.fecha_registro_inicio, filterDto.fecha_registro_fin);
+      } else if (filterDto.fecha_registro_inicio) {
+        where.fecha_registro = MoreThanOrEqual(filterDto.fecha_registro_inicio);
+      } else if (filterDto.fecha_registro_fin) {
+        where.fecha_registro = LessThanOrEqual(filterDto.fecha_registro_fin);
+      }
+    }
+
+    const validSortFields = ['id', 'nombre', 'correo', 'nombre_usuario', 'activo', 'fecha_registro'];
+    const orderBy = validSortFields.includes(sortBy) ? sortBy : 'nombre';
+
+    const [data, total] = await this.userRepository.findAndCount({
+      where,
+      select: ['id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro'],
+      relations: ['rol'],
+      skip,
+      take: limit,
+      order: { [orderBy]: order },
     });
+
+    return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
   async findOne(id: string) {

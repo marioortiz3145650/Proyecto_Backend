@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like, Between } from 'typeorm';
 
 import { Muerte } from './entities/muerte.entity';
 import { Lote } from '../lotes/entities/lote.entity';
 import { CreateMuerteDto } from './dto/create-muerte.dto';
 import { User } from 'src/usuarios/entities/usuario.entity';
 import { UpdateMuerteDto } from './dto/update-muerte.dto';
+import { FilterMuerteDto } from './dto/filter-muerte.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
+import { PaginationUtil } from '../common/utils/pagination.util';
 
 @Injectable()
 export class MuertesService {
@@ -49,10 +53,49 @@ export class MuertesService {
     return this.muerteRepo.save(muerte);
   }
 
-  findAll() {
-    return this.muerteRepo.find({
+  async findAll(
+    paginationDto: PaginationDto,
+    filterDto?: FilterMuerteDto,
+  ): Promise<PaginatedResponse<Muerte>> {
+    const { page = 1, limit = 10, sortBy = 'fecha', order = 'DESC' } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (filterDto) {
+      if (filterDto.fecha) {
+        where.fecha = filterDto.fecha;
+      }
+
+      if (filterDto.lote) {
+        where.lote = { id_lote: filterDto.lote };
+      }
+
+      if (filterDto.cantidad_min !== undefined && filterDto.cantidad_max !== undefined) {
+        where.cantidad = Between(filterDto.cantidad_min, filterDto.cantidad_max);
+      } else if (filterDto.cantidad_min !== undefined) {
+        where.cantidad = Between(filterDto.cantidad_min, Infinity);
+      } else if (filterDto.cantidad_max !== undefined) {
+        where.cantidad = Between(0, filterDto.cantidad_max);
+      }
+
+      if (filterDto.causa) {
+        where.causa = Like(`%${filterDto.causa}%`);
+      }
+    }
+
+    const validSortFields = ['id_muerte', 'fecha', 'cantidad'];
+    const orderBy = validSortFields.includes(sortBy) ? sortBy : 'fecha';
+
+    const [data, total] = await this.muerteRepo.findAndCount({
+      where,
       relations: ['lote', 'usuario'],
+      skip,
+      take: limit,
+      order: { [orderBy]: order },
     });
+
+    return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
   async findOne(id: number) {

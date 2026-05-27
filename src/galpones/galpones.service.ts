@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { Galpon } from './entities/galpone.entity';
 import { Lote } from '../lotes/entities/lote.entity';
 import { CreateGalponDto } from './dto/create-galpone.dto';
 import { UpdateGalponDto } from './dto/update-galpone.dto';
+import { FilterGalponDto } from './dto/filter-galpon.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
+import { PaginationUtil } from '../common/utils/pagination.util';
 
 @Injectable()
 export class GalponesService {
@@ -42,11 +46,41 @@ export class GalponesService {
     return this.galponRepository.save(galpon);
   }
 
-  async findAll() {
-    return this.galponRepository.find({
+  async findAll(
+    paginationDto: PaginationDto,
+    filterDto?: FilterGalponDto,
+  ): Promise<PaginatedResponse<Galpon>> {
+    const { page = 1, limit = 10, sortBy = 'nombre', order = 'ASC' } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    // Construir where conditions dinámicamente
+    const where: any = {};
+
+    if (filterDto) {
+      if (filterDto.nombre) {
+        where.nombre = Like(`%${filterDto.nombre}%`);
+      }
+      if (filterDto.direccion) {
+        where.direccion = Like(`%${filterDto.direccion}%`);
+      }
+      if (filterDto.lote) {
+        where.lote = { id_lote: filterDto.lote };
+      }
+    }
+
+    // Validar campo de ordenamiento
+    const validSortFields = ['nombre', 'direccion', 'fecha_creacion'];
+    const orderBy = validSortFields.includes(sortBy) ? sortBy : 'nombre';
+
+    const [data, total] = await this.galponRepository.findAndCount({
+      where,
       relations: ['lote'],
-      order: { nombre: 'ASC' }
+      skip,
+      take: limit,
+      order: { [orderBy]: order },
     });
+
+    return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
   async findOne(id: number) {
