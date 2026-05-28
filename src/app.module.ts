@@ -15,6 +15,7 @@ import { MovimientosInsumoModule } from './movimientos_insumo/movimientos_insumo
 import { AlertasModule } from './alertas/alertas.module';
 import { MuertesModule } from './muertes/muertes.module';
 import { InquilinosModule } from './inquilinos/inquilinos.module';
+import { AuthModule } from './auth/auth.module';
 
 
 @Module({
@@ -44,6 +45,7 @@ import { InquilinosModule } from './inquilinos/inquilinos.module';
     AlertasModule,
     MuertesModule,
     InquilinosModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],
