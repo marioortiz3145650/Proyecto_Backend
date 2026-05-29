@@ -1,7 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { 
+  Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe 
+} from '@nestjs/common';
 import { MovimientosInsumoService } from './movimientos_insumo.service';
 import { CreateMovimientosInsumoDto } from './dto/create-movimientos_insumo.dto';
 import { UpdateMovimientosInsumoDto } from './dto/update-movimientos_insumo.dto';
+import { MovimientosInsumoQueryDto } from './dto/movimientos-insumo-query.dto';
 
 @Controller('movimientos-insumo')
 export class MovimientosInsumoController {
@@ -13,22 +16,25 @@ export class MovimientosInsumoController {
   }
 
   @Get()
-  findAll() {
-    return this.movimientosInsumoService.findAll();
+  findAll(@Query() query: MovimientosInsumoQueryDto) {
+    return this.movimientosInsumoService.findAll(query);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.movimientosInsumoService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.movimientosInsumoService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMovimientosInsumoDto: UpdateMovimientosInsumoDto) {
-    return this.movimientosInsumoService.update(+id, updateMovimientosInsumoDto);
+  update(
+    @Param('id', ParseIntPipe) id: number, 
+    @Body() updateDto: UpdateMovimientosInsumoDto
+  ) {
+    return this.movimientosInsumoService.update(id, updateDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.movimientosInsumoService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.movimientosInsumoService.remove(id);
   }
 }

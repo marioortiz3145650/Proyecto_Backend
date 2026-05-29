@@ -1,16 +1,10 @@
 import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  ParseIntPipe 
-} from '@nestjs/common';
+  Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query}
+from '@nestjs/common';
 import { LotesService } from './lotes.service';
 import { CreateLoteDto } from './dto/create-lote.dto';
 import { UpdateLoteDto } from './dto/update-lote.dto';
+import { LotesQueryDto } from './dto/lotes-query.dto';
 
 @Controller('lotes')
 export class LotesController {
@@ -22,8 +16,8 @@ export class LotesController {
   }
 
   @Get()
-  findAll() {
-    return this.lotesService.findAll();
+  findAll(@Query() query: LotesQueryDto) {
+    return this.lotesService.findAll(query);
   }
 
   @Get(':id')

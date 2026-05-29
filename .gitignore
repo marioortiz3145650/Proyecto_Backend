@@ -55,3 +55,13 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 "postgres/"  
+
+src/alertas/
+src/estados/
+src/muertes/
+src/raza/
+src/roles/
+src/usuarios/
+
+postgres/
+New-Item

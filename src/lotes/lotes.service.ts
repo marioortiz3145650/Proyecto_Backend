@@ -5,6 +5,7 @@ import { Lote } from './entities/lote.entity';
 import { Breed } from '../breed/entities/breed.entity';
 import { CreateLoteDto } from './dto/create-lote.dto';
 import { UpdateLoteDto } from './dto/update-lote.dto';
+import { LotesQueryDto } from './dto/lotes-query.dto';
 
 @Injectable()
 export class LotesService {
@@ -15,50 +16,63 @@ export class LotesService {
     private breedRepository: Repository<Breed>,
   ) {}
 
-
-async create(createLoteDto: CreateLoteDto) {
-  let breed: Breed | null = null;
-
-  if (createLoteDto.raza) {
-    breed = await this.breedRepository.findOne({
-      where: { id_raza: createLoteDto.raza }
-    });
-
-    if (!breed) {
-      throw new NotFoundException(`Raza con ID ${createLoteDto.raza} no encontrada`);
+  async create(createLoteDto: CreateLoteDto) {
+    let breed: Breed | null = null;
+    if (createLoteDto.raza) {
+      breed = await this.breedRepository.findOne({
+        where: { id_raza: createLoteDto.raza }
+      });
+      if (!breed) {
+        throw new NotFoundException(`Raza con ID ${createLoteDto.raza} no encontrada`);
+      }
     }
+
+    const loteData: Partial<Lote> = {
+      edad_semanas: createLoteDto.edad_semanas,
+      produccion_pct: createLoteDto.produccion_pct || 0,
+      fecha_inicio: createLoteDto.fecha_inicio,
+      fecha_fin: createLoteDto.fecha_fin || null,
+    };
+
+    if (breed) {
+      loteData.raza = breed;
+    }
+
+    const lote = this.loteRepository.create(loteData);
+    return this.loteRepository.save(lote);
   }
 
+  async findAll(queryDto: LotesQueryDto) {
+    const { page = 1, limit = 10, raza_id, search } = queryDto;
+    
+    const queryBuilder = this.loteRepository.createQueryBuilder('lote')
+      .leftJoinAndSelect('lote.raza', 'raza')
+      .leftJoinAndSelect('lote.galpones', 'galpones');
 
-  const loteData: Partial<Lote> = {
-    edad_semanas: createLoteDto.edad_semanas,
-    produccion_pct: createLoteDto.produccion_pct || 0,
-    fecha_inicio: createLoteDto.fecha_inicio,
-    fecha_fin: createLoteDto.fecha_fin || null,
-  };
+    if (raza_id) {
+      queryBuilder.andWhere('lote.raza_id = :raza_id', { raza_id });
+    }
 
+    if (search) {
+      queryBuilder.andWhere('raza.nombre LIKE :search', { search: `%${search}%` });
+    }
 
-  if (breed) {
-    loteData.raza = breed;
-  }
+    const [data, totalItems] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('lote.id_lote', 'DESC')
+      .getManyAndCount();
 
-  const lote = this.loteRepository.create(loteData);
-  return this.loteRepository.save(lote);
-}
-
-  async findAll() {
-    return this.loteRepository.find({
-      relations: ['raza', 'galpones'],
-      select: [
-        'id_lote',
-        'edad_semanas',
-        'produccion_pct',
-        'fecha_inicio',
-        'fecha_fin',
-        'fecha_creacion',
-      ],
-      order: { id_lote: 'DESC' }
-    });
+    return {
+      data,
+      meta: {
+        totalItems,
+        itemCount: data.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
   }
 
   async findOne(id: number) {
@@ -66,61 +80,36 @@ async create(createLoteDto: CreateLoteDto) {
       where: { id_lote: id },
       relations: ['raza', 'galpones'],
     });
-
     if (!lote) {
       throw new NotFoundException(`Lote con ID ${id} no encontrado`);
     }
-
     return lote;
   }
 
   async update(id: number, updateLoteDto: UpdateLoteDto) {
-  const lote = await this.findOne(id);
+    const lote = await this.findOne(id);
+    const updateData: Partial<Lote> = {};
 
+    if (updateLoteDto.edad_semanas !== undefined) updateData.edad_semanas = updateLoteDto.edad_semanas;
+    if (updateLoteDto.produccion_pct !== undefined) updateData.produccion_pct = updateLoteDto.produccion_pct;
+    if (updateLoteDto.fecha_inicio !== undefined) updateData.fecha_inicio = updateLoteDto.fecha_inicio;
+    if (updateLoteDto.fecha_fin !== undefined) updateData.fecha_fin = updateLoteDto.fecha_fin;
 
-  const updateData: Partial<Lote> = {};
-
-
-  if (updateLoteDto.edad_semanas !== undefined) {
-    updateData.edad_semanas = updateLoteDto.edad_semanas;
-  }
-
-  if (updateLoteDto.produccion_pct !== undefined) {
-    updateData.produccion_pct = updateLoteDto.produccion_pct;
-  }
-
-  if (updateLoteDto.fecha_inicio !== undefined) {
-    updateData.fecha_inicio = updateLoteDto.fecha_inicio;
-  }
-
-  if (updateLoteDto.fecha_fin !== undefined) {
-    updateData.fecha_fin = updateLoteDto.fecha_fin;
-  }
-
-  if (updateLoteDto.raza) {
-    const breed = await this.breedRepository.findOne({
-      where: { id_raza: updateLoteDto.raza }
-    });
-
-    if (!breed) {
-      throw new NotFoundException(`Raza con ID ${updateLoteDto.raza} no encontrada`);
+    if (updateLoteDto.raza) {
+      const breed = await this.breedRepository.findOne({ where: { id_raza: updateLoteDto.raza } });
+      if (!breed) throw new NotFoundException(`Raza con ID ${updateLoteDto.raza} no encontrada`);
+      updateData.raza = breed;  
     }
 
-    updateData.raza = breed;  
+    await this.loteRepository.update({ id_lote: id }, updateData);
+    return this.findOne(id);
   }
-
-  await this.loteRepository.update({ id_lote: id }, updateData);
-  return this.findOne(id);
-}
 
   async remove(id: number) {
     const lote = await this.findOne(id);
-    
-
     if (lote.galpones && lote.galpones.length > 0) {
-      throw new Error(`No se puede eliminar el lote ${id} porque tiene ${lote.galpones.length} galpón(es) asociados`);
+      throw new Error(`No se puede eliminar el lote ${id} porque tiene galpones asociados`);
     }
-
     await this.loteRepository.delete({ id_lote: id });
     return { message: `Lote ${id} eliminado correctamente` };
   }

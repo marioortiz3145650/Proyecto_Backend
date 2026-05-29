@@ -1,19 +1,10 @@
 import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  ParseIntPipe,
-  Post as HttpPost,
-  HttpCode,
-  HttpStatus
+  Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query, HttpCode, HttpStatus 
 } from '@nestjs/common';
 import { BreedService } from './breed.service';
 import { CreateBreedDto } from './dto/create-breed.dto';
 import { UpdateBreedDto } from './dto/update-breed.dto';
+import { BreedQueryDto } from './dto/breed-query.dto';
 
 @Controller('breed')
 export class BreedController {
@@ -25,8 +16,8 @@ export class BreedController {
   }
 
   @Get()
-  findAll() {
-    return this.breedService.findAll();
+  findAll(@Query() query: BreedQueryDto) {
+    return this.breedService.findAll(query);
   }
 
   @Get(':id')
@@ -44,7 +35,7 @@ export class BreedController {
     return this.breedService.remove(id);
   }
 
-  @HttpPost(':id/restore')
+  @Post(':id/restore')
   @HttpCode(HttpStatus.OK)
   restore(@Param('id', ParseIntPipe) id: number) {
     return this.breedService.restore(id);

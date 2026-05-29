@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { CreateTratamientoDto } from './dto/create-tratamiento.dto';
 import { UpdateTratamientoDto } from './dto/update-tratamiento.dto'; // Asegúrate de tener este DTO
 import { Tratamiento } from './entities/tratamiento.entity';
+import { TratamientoQueryDto } from './dto/tratamiento-query.dto';
 
 @Injectable()
 export class TratamientosService {
@@ -21,8 +22,34 @@ export class TratamientosService {
     return await this.repo.save(nuevo);
   }
 
-  async findAll() {
-    return await this.repo.find();
+  async findAll(queryDto?: TratamientoQueryDto) {
+    const { page = 1, limit = 10, lote_id, estado_id } = queryDto || {};
+    const queryBuilder = this.repo.createQueryBuilder('tratamiento');
+
+    if (lote_id) {
+      queryBuilder.andWhere('tratamiento.lote_id = :lote_id', { lote_id });
+    }
+
+    if (estado_id) {
+      queryBuilder.andWhere('tratamiento.estado_id = :estado_id', { estado_id });
+    }
+
+    const [data, totalItems] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('tratamiento.fecha', 'DESC')
+      .getManyAndCount();
+
+    return {
+      data,
+      meta: {
+        totalItems,
+        itemCount: data.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
   }
 
   // --- ESTOS SON LOS QUE FALTABAN ---

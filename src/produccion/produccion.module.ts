@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm'; // Importante
 import { ProduccionService } from './produccion.service';
 import { ProduccionController } from './produccion.controller';
-import { Produccion } from './entities/produccion.entity'; // Importante
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Produccion } from './entities/produccion.entity';
+import { LotesModule } from '../lotes/lotes.module'; // <--- ¡Añade esta importación! (Revisa los puntos según tu ruta)
 
 @Module({
   imports: [
-    // Esta línea le dice a Nest: "Usa esta entidad para crear la tabla en Postgres"
-    TypeOrmModule.forFeature([Produccion]) 
+    TypeOrmModule.forFeature([Produccion]),
+    LotesModule // <--- ¡AÑADE ESTO AQUÍ! Ahora ProduccionService tendrá acceso al LoteRepository
   ],
   controllers: [ProduccionController],
   providers: [ProduccionService],
-  exports: [TypeOrmModule] // Por si otro módulo necesita usar Producción después
 })
 export class ProduccionModule {}

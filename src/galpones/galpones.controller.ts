@@ -1,16 +1,10 @@
 import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  ParseIntPipe 
+  Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query 
 } from '@nestjs/common';
 import { GalponesService } from './galpones.service';
 import { CreateGalponDto } from './dto/create-galpone.dto';
 import { UpdateGalponDto } from './dto/update-galpone.dto';
+import { GalponesQueryDto } from './dto/galpones-query.dto';
 
 @Controller('galpones')
 export class GalponesController {
@@ -22,13 +16,8 @@ export class GalponesController {
   }
 
   @Get()
-  findAll() {
-    return this.galponesService.findAll();
-  }
-
-  @Get('lote/:loteId')
-  findByLote(@Param('loteId', ParseIntPipe) loteId: number) {
-    return this.galponesService.findByLote(loteId);
+  findAll(@Query() query: GalponesQueryDto) {
+    return this.galponesService.findAll(query);
   }
 
   @Get(':id')

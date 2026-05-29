@@ -1,11 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { 
+  Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe 
+} from '@nestjs/common';
 import { AlimentosService } from './alimentos.service';
 import { CreateAlimentoDto } from './dto/create-alimento.dto';
 import { UpdateAlimentoDto } from './dto/update-alimento.dto';
+import { AlimentosQueryDto } from './dto/alimentos-query.dto';
 
 @Controller('alimentos')
 export class AlimentosController {
-
   constructor(private readonly alimentosService: AlimentosService) {}
 
   @Post()
@@ -14,25 +16,25 @@ export class AlimentosController {
   }
 
   @Get()
-  findAll() {
-    return this.alimentosService.findAll();
+  findAll(@Query() query: AlimentosQueryDto) {
+    return this.alimentosService.findAll(query);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.alimentosService.findOne(Number(id));
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.alimentosService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
-    @Body() updateAlimentoDto: UpdateAlimentoDto,
+    @Param('id', ParseIntPipe) id: number, 
+    @Body() updateAlimentoDto: UpdateAlimentoDto
   ) {
-    return this.alimentosService.update(Number(id), updateAlimentoDto);
+    return this.alimentosService.update(id, updateAlimentoDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.alimentosService.remove(Number(id));
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.alimentosService.remove(id);
   }
 }

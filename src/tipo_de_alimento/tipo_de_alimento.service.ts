@@ -4,6 +4,7 @@ import { UpdateTipoDeAlimentoDto } from './dto/update-tipo_de_alimento.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TipoDeAlimento } from './entities/tipo_de_alimento.entity';
+import { TipoDeAlimentoQueryDto } from './dto/tipo-de-alimento-query.dto';
 
 @Injectable()
 export class TipoDeAlimentosService {
@@ -18,8 +19,30 @@ export class TipoDeAlimentosService {
     return await this.tipoRepository.save(tipo);
   }
 
-  async findAll() {
-    return await this.tipoRepository.find();
+  async findAll(queryDto?: TipoDeAlimentoQueryDto) {
+    const { page = 1, limit = 10, search } = queryDto || {};
+    const queryBuilder = this.tipoRepository.createQueryBuilder('tipo');
+
+    if (search) {
+      queryBuilder.where('tipo.nombre LIKE :search', { search: `%${search}%` });
+    }
+
+    const [data, totalItems] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('tipo.nombre', 'ASC')
+      .getManyAndCount();
+
+    return {
+      data,
+      meta: {
+        totalItems,
+        itemCount: data.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
   }
 
   async findOne(id: number) {
@@ -27,11 +50,11 @@ export class TipoDeAlimentosService {
   }
 
   async update(id: number, dto: UpdateTipoDeAlimentoDto) {
-    await this.tipoRepository.update(id, dto);
+    await this.tipoRepository.update({ id_tipo_insumo: id }, dto);
     return this.findOne(id);
   }
 
   async remove(id: number) {
-    return await this.tipoRepository.delete(id);
+    return await this.tipoRepository.delete({ id_tipo_insumo: id });
   }
 }
