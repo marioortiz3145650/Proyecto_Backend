@@ -7,35 +7,40 @@ import {
   ManyToOne,
   JoinColumn
 } from 'typeorm';
-import { Rol } from 'src/rols/entities/rol.entity';
+import { Rol } from 'src/roles/entities/rol.entity';
+import { Inquilino } from 'src/inquilinos/entities/inquilino.entity';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column('text')
-  name: string;
+  nombre!: string;
 
   @Column('text', { unique: true })
-  email: string;
+  correo!: string;
 
   @Column('text', { unique: true })
-  username: string;
+  nombre_usuario!: string;
 
   @Column('text', { select: false })
-  password_hash: string;
+  contrasena_hash!: string;
 
   @ManyToOne(() => Rol)
   @JoinColumn({ name: 'rol_id' })
-  rol: Rol;
+  rol!: Rol;
+
+  @ManyToOne(() => Inquilino)
+  @JoinColumn({ name: 'inquilino_id' })
+  inquilino!: Inquilino;
 
   @Column('bool', { default: true }) 
-  activo: boolean;
+  activo!: boolean;
 
   @CreateDateColumn()
-  fecha_registro: Date;
+  fecha_registro!: Date;
 
   @UpdateDateColumn()
-  fecha_actualizacion: Date;
+  fecha_actualizacion!: Date;
 }

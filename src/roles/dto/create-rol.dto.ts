@@ -6,6 +6,6 @@ export class CreateRolDto {
     @MinLength(3)
     @MaxLength(100)
     @IsNotEmpty()
-    nombre: string;
+    nombre!: string;
 
 }

@@ -1,22 +1,22 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-// --- IMPORTACIÓN DE TUS MÓDULOS CON LAS CARPETAS CORRECTAS ---
-import { UsersModule } from './users/users.module';
+import { UsersModule } from './usuarios/usuarios.module';
 import { RolesModule } from './roles/roles.module';
-import { UnidadesDeMedidaModule } from './unidades_de_medida/unidades_de_medida.module';
-import { AlimentosModule } from './alimentos/alimentos.module';
-import { BreedModule } from './breed/breed.module';
+import { BreedModule } from './raza/raza.module';
 import { LotesModule } from './lotes/lotes.module';
 import { GalponesModule } from './galpones/galpones.module';
-import { ProduccionModule } from './produccion/produccion.module';
-import { TratamientosModule } from './tratamientos/tratamientos.module';
+import { AlimentosModule } from './alimentos/alimentos.module';
+import { UnidadesDeMedidaModule } from './unidades_de_medida/unidades_de_medida.module';
 import { TipoDeAlimentosModule } from './tipo_de_alimento/tipo_de_alimento.module';
-import { LoteCierreModule } from './lote-cierre/lote-cierre.module';
-
-// REPARADO: Sin la "s" al final para que coincida exactamente con tu archivo
+import { ProduccionModule } from './produccion/produccion.module';
+import { EstadosModule } from './estados/estados.module';
 import { MovimientosInsumoModule } from './movimientos_insumo/movimientos_insumo.module';
+import { AlertasModule } from './alertas/alertas.module';
+import { MuertesModule } from './muertes/muertes.module';
+import { InquilinosModule } from './inquilinos/inquilinos.module';
+import { TratamientosModule } from './tratamientos/tratamientos.module';
+import { LoteCierreModule } from './lote-cierre/lote-cierre.module';
 
 @Module({
   imports: [
@@ -36,16 +36,20 @@ import { MovimientosInsumoModule } from './movimientos_insumo/movimientos_insumo
     // --- REGISTRO GLOBAL EN EL ARREGLO DE IMPORTS ---
     UsersModule,
     RolesModule,
-    UnidadesDeMedidaModule,
-    AlimentosModule,
     BreedModule,
     LotesModule,
     GalponesModule,
+    AlimentosModule,
+    UnidadesDeMedidaModule,
+    TipoDeAlimentosModule,
     ProduccionModule,
     TratamientosModule,
-    TipoDeAlimentosModule,
     LoteCierreModule,
+    EstadosModule,
     MovimientosInsumoModule,
+    AlertasModule,
+    MuertesModule,
+    InquilinosModule,
   ],
   controllers: [],
   providers: [],

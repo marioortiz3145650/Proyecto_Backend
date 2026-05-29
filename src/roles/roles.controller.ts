@@ -1,4 +1,3 @@
-// src/roles/roles.controller.ts
 import { 
   Controller, 
   Get, 
@@ -11,7 +10,7 @@ import {
   HttpCode,
   HttpStatus
 } from '@nestjs/common';
-import { RolsService } from './rols.service';
+import { RolsService } from './roles.service';
 import { CreateRolDto } from './dto/create-rol.dto';
 import { UpdateRolDto } from './dto/update-rol.dto';
 
@@ -39,6 +38,7 @@ export class RolsController {
     return this.rolesService.update(id, updateRolDto);
   }
 
+  
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   remove(@Param('id', ParseUUIDPipe) id: string) {

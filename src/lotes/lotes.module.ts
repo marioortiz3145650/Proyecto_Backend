@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { LotesService } from './lotes.service';
-import { LotesController } from './lotes.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Lote } from './entities/lote.entity';
+import { LotesService } from './lotes.service';
+import { LotesController } from './lotes.controller';
 import { BreedModule } from '../breed/breed.module'; // <--- ¡Añade esta importación!
 
 @Module({
