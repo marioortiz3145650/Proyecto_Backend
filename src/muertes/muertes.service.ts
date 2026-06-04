@@ -26,31 +26,80 @@ export class MuertesService {
   ) {}
 
   async create(dto: CreateMuerteDto) {
-    const lote = await this.loteRepo.findOne({
-      where: { id_lote: dto.loteId }
-    });
+  const lote = await this.loteRepo.findOne({
+    where: { id_lote: dto.loteId }
+  });
+  if (!lote) throw new NotFoundException('Lote no encontrado');
 
-    if (!lote) {
-      throw new NotFoundException('Lote no encontrado');
+  const usuario = await this.userRepo.findOne({
+    where: { id: dto.usuarioId }
+  });
+  if (!usuario) throw new NotFoundException('Usuario no encontrado');
+
+  const muerte = this.muerteRepo.create({
+    fecha: dto.fecha,
+    cantidad: dto.cantidad,
+    causa: dto.causa,
+    lote,
+    usuario,
+  });
+
+  const resultado = await this.muerteRepo.save(muerte);
+
+  // Descontar del lote
+  await this.loteRepo.update(
+    { id_lote: lote.id_lote },
+    { total_gallinas: Math.max(0, (lote.total_gallinas || 0) - dto.cantidad) }
+  );
+
+  return resultado;
+  }
+
+  async update(id: number, dto: UpdateMuerteDto) {
+    const muerteAnterior = await this.findOne(id);
+    const updateData: Partial<Muerte> = {};
+
+    if (dto.fecha !== undefined) updateData.fecha = dto.fecha as any;
+    if (dto.causa !== undefined) updateData.causa = dto.causa;
+
+    if (dto.cantidad !== undefined) {
+      const diferencia = dto.cantidad - muerteAnterior.cantidad;
+      updateData.cantidad = dto.cantidad;
+
+      const lote = muerteAnterior.lote;
+      await this.loteRepo.update(
+        { id_lote: lote.id_lote },
+        { total_gallinas: Math.max(0, (lote.total_gallinas || 0) - diferencia) }
+      );
     }
 
-    const usuario = await this.userRepo.findOne({
-      where: { id: dto.usuarioId }
-    });
-
-    if (!usuario) {
-      throw new NotFoundException('Usuario no encontrado');
+    if (dto.loteId !== undefined) {
+      const lote = await this.loteRepo.findOne({ where: { id_lote: dto.loteId } });
+      if (!lote) throw new NotFoundException('Lote no encontrado');
+      updateData.lote = lote;
     }
 
-    const muerte = this.muerteRepo.create({
-      fecha: dto.fecha,
-      cantidad: dto.cantidad,
-      causa: dto.causa,
-      lote: lote,
-      usuario: usuario,
-    });
+    if (dto.usuarioId !== undefined) {
+      const usuario = await this.userRepo.findOne({ where: { id: dto.usuarioId } });
+      if (!usuario) throw new NotFoundException('Usuario no encontrado');
+      updateData.usuario = usuario;
+    }
 
-    return this.muerteRepo.save(muerte);
+    await this.muerteRepo.update({ id_muerte: id }, updateData);
+    return this.findOne(id);
+  }
+
+  async remove(id: number) {
+    const muerte = await this.findOne(id);
+
+    // Devolver gallinas al lote
+    await this.loteRepo.update(
+      { id_lote: muerte.lote.id_lote },
+      { total_gallinas: (muerte.lote.total_gallinas || 0) + muerte.cantidad }
+    );
+
+    await this.muerteRepo.delete({ id_muerte: id });
+    return { message: 'Muerte eliminada correctamente' };
   }
 
   async findAll(
@@ -111,47 +160,5 @@ export class MuertesService {
     return muerte;
   }
 
-  async update(id: number, dto: UpdateMuerteDto) {
-    await this.findOne(id); // Verifica que existe
-    
-    const updateData: Partial<Muerte> = {};
-    
-    if (dto.fecha !== undefined) {
-      updateData.fecha = dto.fecha;
-    }
-    
-    if (dto.cantidad !== undefined) {
-      updateData.cantidad = dto.cantidad;
-    }
-    
-    if (dto.causa !== undefined) {
-      updateData.causa = dto.causa;
-    }
-    
-    // Manejar relaciones si se proporcionan
-    if (dto.loteId !== undefined) {
-      const lote = await this.loteRepo.findOne({ where: { id_lote: dto.loteId } });
-      if (!lote) {
-        throw new NotFoundException('Lote no encontrado');
-      }
-      updateData.lote = lote;
-    }
-    
-    if (dto.usuarioId !== undefined) {
-      const usuario = await this.userRepo.findOne({ where: { id: dto.usuarioId } });
-      if (!usuario) {
-        throw new NotFoundException('Usuario no encontrado');
-      }
-      updateData.usuario = usuario;
-    }
 
-    await this.muerteRepo.update({ id_muerte: id }, updateData);
-    return this.findOne(id);
-  }
-
-  async remove(id: number) {
-    await this.findOne(id);
-    await this.muerteRepo.delete({ id_muerte: id });
-    return { message: 'Muerte eliminada correctamente' };
-  }
 }

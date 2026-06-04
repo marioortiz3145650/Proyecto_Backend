@@ -1,11 +1,11 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateMuerteDto } from './create-muerte.dto';
-import { IsDate, IsInt, IsOptional, IsString, MaxLength } from "class-validator";
+import { IsDateString, IsInt, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class UpdateMuerteDto extends PartialType(CreateMuerteDto) {
-    @IsDate()
+    @IsDateString()
     @IsOptional()
-    fecha?: Date;
+    fecha?: string;
 
     @IsInt()
     @IsOptional()

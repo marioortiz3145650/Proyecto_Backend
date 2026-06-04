@@ -7,9 +7,9 @@ import {
   Param, 
   Delete, 
   ParseIntPipe,
-  Post as HttpPost,
   HttpCode,
-  HttpStatus
+  HttpStatus,
+  Query
 } from '@nestjs/common';
 import { BreedService } from './raza.service';
 import { CreateBreedDto } from './dto/create-raza.dto';
@@ -25,8 +25,8 @@ export class BreedController {
   }
 
   @Get()
-  findAll() {
-    return this.breedService.findAll();
+  findAll(@Query('all') all?: string) {
+    return this.breedService.findAll(all === 'true');
   }
 
   @Get(':id')
@@ -44,7 +44,7 @@ export class BreedController {
     return this.breedService.remove(id);
   }
 
-  @HttpPost(':id/restore')
+  @Post(':id/restore')
   @HttpCode(HttpStatus.OK)
   restore(@Param('id', ParseIntPipe) id: number) {
     return this.breedService.restore(id);

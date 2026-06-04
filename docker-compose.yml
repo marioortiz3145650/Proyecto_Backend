@@ -1,13 +1,33 @@
+name: proyecto_nest_angular
+
 services:
   db:
     image: postgres:14.3
     restart: always
+    container_name: proyecto_nest_angular_db
     ports:
       - "5434:5432"
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    container_name: laying-hens
-
+      POSTGRES_USER: ${USER_NAME}
     volumes:
       - ./postgres:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: proyecto_nest_backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      USER_NAME: ${USER_NAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      PORT: 3000
+    depends_on:
+      - db

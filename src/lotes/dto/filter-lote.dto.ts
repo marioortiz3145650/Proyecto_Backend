@@ -16,15 +16,8 @@ export class FilterLoteDto {
   @Min(0)
   edad_semanas_max?: number;
 
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  produccion_pct_min?: number;
 
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  produccion_pct_max?: number;
+
 
   @IsOptional()
   @IsString()

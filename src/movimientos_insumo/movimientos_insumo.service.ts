@@ -19,7 +19,7 @@ export class MovimientosInsumoService {
       cantidad: dto.cantidad,
       tipo_movimiento: dto.tipo_movimiento,
       observaciones: dto.observaciones || '',
-      alimento: { id_alimento: dto.insumo_id } as any, 
+      alimento: { id_insumo: dto.insumo_id } as any, 
       lote: { id_lote: dto.lote_id } as any,
       creado_por: { id: dto.creado_por } as any,
     });

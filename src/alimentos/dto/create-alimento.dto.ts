@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsNumber } from 'class-validator';
+import { IsString, IsInt, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateAlimentoDto {
 
@@ -17,6 +17,7 @@ export class CreateAlimentoDto {
   @IsNumber()
   stock_minimo!: number;
 
+  @IsOptional()
   @IsNumber()
-  precio_unitario!: number;
+  precio_unitario?: number;
 }

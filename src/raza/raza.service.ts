@@ -30,9 +30,9 @@ export class BreedService {
     return this.breedRepository.save(breed);
   }
 
-  async findAll() {
+  async findAll(all = false) {
     return this.breedRepository.find({
-      where: { activo: true },
+      where: all ? {} : { activo: true },
       select: ['id_raza', 'nombre_raza', 'activo', 'fecha_creacion'],
       order: { nombre_raza: 'ASC' }
     });

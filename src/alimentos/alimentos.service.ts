@@ -18,7 +18,12 @@ export class AlimentosService {
   ) {}
 
   async create(createAlimentoDto: CreateAlimentoDto) {
-    const alimento = this.alimentoRepository.create(createAlimentoDto);
+    const { tipo_alimento_id, unidad_medida_id, ...rest } = createAlimentoDto;
+    const alimento = this.alimentoRepository.create({
+      ...rest,
+      tipo_alimento: { id_tipo_insumo: tipo_alimento_id } as any,
+      unidad_medida: { id_unidad: unidad_medida_id } as any,
+    });
     return await this.alimentoRepository.save(alimento);
   }
 
@@ -32,12 +37,12 @@ export class AlimentosService {
     const where: any = {};
 
     if (filterDto) {
-      if (filterDto.nombre) {
-        where.nombre = Like(`%${filterDto.nombre}%`);
+      if (filterDto.id_insumo) {
+        where.id_insumo = filterDto.id_insumo;
       }
 
       if (filterDto.tipo_alimento) {
-        where.tipo_alimento = { id_tipo: filterDto.tipo_alimento };
+        where.tipo_alimento = { id_tipo_insumo: filterDto.tipo_alimento };
       }
 
       if (filterDto.unidad_medida) {
@@ -80,11 +85,22 @@ export class AlimentosService {
   }
 
   async findOne(id: number) {
-    return await this.alimentoRepository.findOneBy({ id_insumo: id });
+    return await this.alimentoRepository.findOne({
+      where: { id_insumo: id },
+      relations: ['tipo_alimento', 'unidad_medida'],
+    });
   }
 
   async update(id: number, updateAlimentoDto: UpdateAlimentoDto) {
-    await this.alimentoRepository.update(id, updateAlimentoDto);
+    const { tipo_alimento_id, unidad_medida_id, ...rest } = updateAlimentoDto;
+    const updateData: any = { ...rest };
+    if (tipo_alimento_id !== undefined) {
+      updateData.tipo_alimento = { id_tipo_insumo: tipo_alimento_id };
+    }
+    if (unidad_medida_id !== undefined) {
+      updateData.unidad_medida = { id_unidad: unidad_medida_id };
+    }
+    await this.alimentoRepository.update(id, updateData);
     return this.findOne(id);
   }
 

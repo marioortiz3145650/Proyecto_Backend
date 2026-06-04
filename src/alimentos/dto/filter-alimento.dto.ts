@@ -39,4 +39,9 @@ export class FilterAlimentoDto {
   @IsNumber()
   @Min(0)
   precio_unitario_max?: number;
+  
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  id_insumo?: number;
 }

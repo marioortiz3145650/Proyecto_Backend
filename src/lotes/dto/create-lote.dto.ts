@@ -1,7 +1,7 @@
 import { 
   IsInt, 
-  IsDecimal, 
-  IsDate, 
+  IsNumber, 
+  IsDateString, 
   IsNotEmpty, 
   Min, 
   Max, 
@@ -15,21 +15,26 @@ export class CreateLoteDto {
   raza?: number;
 
   @IsInt()
+  @Min(1)
+  @IsOptional()
+  raza_id?: number;
+
+  @IsInt()
   @Min(0)
   @IsNotEmpty()
   edad_semanas!: number;
 
-  @IsDecimal({ decimal_digits: '2' })
-  @Min(0)
-  @Max(100)
-  @IsOptional()
-  produccion_pct?: number;
 
-  @IsDate()
+  @IsDateString()
   @IsNotEmpty()
-  fecha_inicio!: Date;
+  fecha_inicio!: string;
 
-  @IsDate()
+  @IsDateString()
   @IsOptional()
-  fecha_fin?: Date;
+  fecha_fin?: string;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  total_gallinas?: number;
 }

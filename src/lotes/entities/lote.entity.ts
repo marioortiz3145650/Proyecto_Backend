@@ -23,13 +23,6 @@ export class Lote {
   @Column('int', { name: 'edad_semanas' })
   edad_semanas!: number;
 
-  @Column('decimal', { 
-    name: 'produccion_pct', 
-    precision: 5, 
-    scale: 2,
-    default: 0 
-  })
-  produccion_pct!: number;
 
   @Column('date', { name: 'fecha_inicio' })
   fecha_inicio!: Date;
@@ -39,6 +32,9 @@ export class Lote {
 
   @OneToMany(() => Galpon, (galpon) => galpon.lote)
   galpones!: Galpon[];
+
+  @Column('int', { name: 'total_gallinas', default: 0 })
+  total_gallinas!: number;
 
   @ManyToOne(() => Inquilino)
   @JoinColumn({ name: 'inquilino_id' })
