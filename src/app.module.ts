@@ -16,6 +16,7 @@ import { AlertasModule } from './alertas/alertas.module';
 import { MuertesModule } from './muertes/muertes.module';
 import { InquilinosModule } from './inquilinos/inquilinos.module';
 import { AuthModule } from './auth/auth.module';
+import { SeedModule } from './seed/seed.module';
 
 
 @Module({
@@ -46,6 +47,7 @@ import { AuthModule } from './auth/auth.module';
     MuertesModule,
     InquilinosModule,
     AuthModule,
+    SeedModule,
   ],
   controllers: [],
   providers: [],
