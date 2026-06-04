@@ -1,0 +1,12 @@
+node_modules
+dist
+postgres
+.git
+.gitignore
+.vscode
+.vs
+npm-debug.log
+*.log
+Dockerfile
+docker-compose.yml
+README.md

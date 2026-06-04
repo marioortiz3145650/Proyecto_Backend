@@ -7,7 +7,9 @@ import {
   Param, 
   Delete, 
   ParseIntPipe,
-  Query 
+  Query,
+  HttpCode,
+  HttpStatus
 } from '@nestjs/common';
 import { LotesService } from './lotes.service';
 import { CreateLoteDto } from './dto/create-lote.dto';
@@ -40,6 +42,12 @@ export class LotesController {
   @Patch(':id')
   update(@Param('id', ParseIntPipe) id: number, @Body() updateLoteDto: UpdateLoteDto) {
     return this.lotesService.update(id, updateLoteDto);
+  }
+
+  @Post(':id/toggle')
+  @HttpCode(HttpStatus.OK)
+  toggleActivo(@Param('id', ParseIntPipe) id: number) {
+    return this.lotesService.toggleActivo(id);
   }
 
   @Delete(':id')
