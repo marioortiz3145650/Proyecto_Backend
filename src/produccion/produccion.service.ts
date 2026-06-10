@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual } from 'typeorm';
 import { CreateProduccionDto } from './dto/create-produccion.dto';
+import { UpdateProduccionDto } from './dto/update-produccion.dto';
 import { Produccion } from './entities/produccion.entity';
 import { FilterProduccionDto } from './dto/filter-produccion.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -115,5 +116,41 @@ export class ProduccionService {
     }
 
     return produccion;
+  }
+
+  async update(id: number, updateProduccionDto: UpdateProduccionDto) {
+    const produccion = await this.findOne(id);
+    
+    const jumbo = updateProduccionDto.jumbo !== undefined ? updateProduccionDto.jumbo : produccion.jumbo;
+    const aaa = updateProduccionDto.aaa !== undefined ? updateProduccionDto.aaa : produccion.aaa;
+    const aa = updateProduccionDto.aa !== undefined ? updateProduccionDto.aa : produccion.aa;
+    const a = updateProduccionDto.a !== undefined ? updateProduccionDto.a : produccion.a;
+    const b = updateProduccionDto.b !== undefined ? updateProduccionDto.b : produccion.b;
+    const c = updateProduccionDto.c !== undefined ? updateProduccionDto.c : produccion.c;
+
+    const total = jumbo + aaa + aa + a + b + c;
+
+    const updateData: any = {
+      ...updateProduccionDto,
+      total,
+    };
+
+    if (updateProduccionDto.lote_id !== undefined) {
+      updateData.lote = { id_lote: updateProduccionDto.lote_id };
+      delete updateData.lote_id;
+    }
+
+    if (updateProduccionDto.creado_por !== undefined) {
+      updateData.creado_por = { id: updateProduccionDto.creado_por };
+      delete updateData.creado_por;
+    }
+
+    await this.produccionRepository.update(id, updateData);
+    return this.findOne(id);
+  }
+
+  async remove(id: number) {
+    const produccion = await this.findOne(id);
+    return await this.produccionRepository.remove(produccion);
   }
 }

@@ -9,7 +9,7 @@ export class PaginationDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(1000)
   limit?: number = 10;
 
   @IsOptional()

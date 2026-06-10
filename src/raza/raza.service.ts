@@ -72,8 +72,14 @@ export class BreedService {
   async remove(id: number) {
     const breed = await this.findOne(id);
     
-    await this.breedRepository.update({ id_raza: id }, { activo: false });
-    return { message: `Raza "${breed.nombre_raza}" desactivada correctamente` };
+    try {
+      await this.breedRepository.delete({ id_raza: id });
+      return { message: `Raza "${breed.nombre_raza}" eliminada correctamente` };
+    } catch (error) {
+      throw new ConflictException(
+        `No se puede eliminar la raza "${breed.nombre_raza}" porque está asociada a uno o más lotes. Desactívala en su lugar.`
+      );
+    }
   }
 
   async restore(id: number) {

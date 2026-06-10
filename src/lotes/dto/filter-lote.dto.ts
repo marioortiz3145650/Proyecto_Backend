@@ -8,6 +8,16 @@ export class FilterLoteDto {
 
   @IsOptional()
   @IsInt()
+  @Min(1)
+  raza_id?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  edad_semanas?: number;
+
+  @IsOptional()
+  @IsInt()
   @Min(0)
   edad_semanas_min?: number;
 
@@ -15,9 +25,6 @@ export class FilterLoteDto {
   @IsInt()
   @Min(0)
   edad_semanas_max?: number;
-
-
-
 
   @IsOptional()
   @IsString()

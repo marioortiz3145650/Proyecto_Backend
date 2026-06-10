@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { AlertasService } from './alertas.service';
 import { CreateAlertaDto } from './dto/create-alerta.dto';
 import { UpdateAlertaDto } from './dto/update-alerta.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { FilterAlertaDto } from './dto/filter-alerta.dto';
 
 @Controller('alertas')
 export class AlertasController {
@@ -13,8 +15,11 @@ export class AlertasController {
   }
 
   @Get()
-  findAll() {
-    return this.alertasService.findAll();
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: FilterAlertaDto,
+  ) {
+    return this.alertasService.findAll(paginationDto, filterDto);
   }
 
   @Get(':id')
@@ -32,3 +37,4 @@ export class AlertasController {
     return this.alertasService.remove(+id);
   }
 }
+
