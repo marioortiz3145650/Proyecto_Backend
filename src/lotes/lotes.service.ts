@@ -61,11 +61,14 @@ async create(createLoteDto: CreateLoteDto) {
     const where: any = {};
 
     if (filterDto) {
-      if (filterDto.raza) {
-        where.raza = { id_raza: filterDto.raza };
+      const razaId = filterDto.raza || filterDto.raza_id;
+      if (razaId) {
+        where.raza = { id_raza: razaId };
       }
 
-      if (filterDto.edad_semanas_min !== undefined && filterDto.edad_semanas_max !== undefined) {
+      if (filterDto.edad_semanas !== undefined) {
+        where.edad_semanas = filterDto.edad_semanas;
+      } else if (filterDto.edad_semanas_min !== undefined && filterDto.edad_semanas_max !== undefined) {
         where.edad_semanas = Between(filterDto.edad_semanas_min, filterDto.edad_semanas_max);
       } else if (filterDto.edad_semanas_min !== undefined) {
         where.edad_semanas = MoreThanOrEqual(filterDto.edad_semanas_min);

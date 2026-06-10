@@ -17,6 +17,7 @@ import { MuertesModule } from './muertes/muertes.module';
 import { InquilinosModule } from './inquilinos/inquilinos.module';
 import { AuthModule } from './auth/auth.module';
 import { SeedModule } from './seed/seed.module';
+import { TratamientosModule } from './tratamientos/tratamientos.module';
 
 
 @Module({
@@ -48,6 +49,7 @@ import { SeedModule } from './seed/seed.module';
     InquilinosModule,
     AuthModule,
     SeedModule,
+    TratamientosModule,
   ],
   controllers: [],
   providers: [],
