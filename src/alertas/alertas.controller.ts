@@ -1,3 +1,4 @@
+
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { AlertasService } from './alertas.service';
 import { CreateAlertaDto } from './dto/create-alerta.dto';
@@ -15,10 +16,30 @@ export class AlertasController {
   }
 
   @Get()
-  findAll(
-    @Query() paginationDto: PaginationDto,
-    @Query() filterDto: FilterAlertaDto,
-  ) {
+  findAll(@Query() query: any) {
+    console.log('CONTROLLER DEBUG: query =', JSON.stringify(query));
+    
+    const paginationDto: PaginationDto = {
+      page: query.page ? parseInt(query.page) : 1,
+      limit: query.limit ? parseInt(query.limit) : 10,
+      sortBy: query.sortBy || 'id_alerta',
+      order: query.order || 'DESC',
+    };
+
+    const filterDto: FilterAlertaDto = {
+      tipo: query.tipo,
+      prioridad: query.prioridad,
+    };
+
+    // Convertir leida manualmente
+    if (query.leida === 'true') {
+      filterDto.leida = true;
+    } else if (query.leida === 'false') {
+      filterDto.leida = false;
+    }
+
+    console.log('CONTROLLER DEBUG: filterDto =', JSON.stringify(filterDto));
+    
     return this.alertasService.findAll(paginationDto, filterDto);
   }
 
@@ -37,4 +58,3 @@ export class AlertasController {
     return this.alertasService.remove(+id);
   }
 }
-
