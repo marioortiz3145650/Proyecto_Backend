@@ -26,33 +26,39 @@ export class MuertesService {
   ) {}
 
   async create(dto: CreateMuerteDto) {
-  const lote = await this.loteRepo.findOne({
-    where: { id_lote: dto.loteId }
-  });
-  if (!lote) throw new NotFoundException('Lote no encontrado');
+    const lote = await this.loteRepo.findOne({
+      where: { id_lote: dto.loteId }
+    });
+    if (!lote) throw new NotFoundException('Lote no encontrado');
 
-  const usuario = await this.userRepo.findOne({
-    where: { id: dto.usuarioId }
-  });
-  if (!usuario) throw new NotFoundException('Usuario no encontrado');
+    if ((lote.total_gallinas || 0) < dto.cantidad) {
+      throw new NotFoundException(
+        `El lote #${lote.id_lote} solo tiene ${lote.total_gallinas || 0} gallinas, no puedes registrar ${dto.cantidad} bajas.`
+      );
+    }
 
-  const muerte = this.muerteRepo.create({
-    fecha: dto.fecha,
-    cantidad: dto.cantidad,
-    causa: dto.causa,
-    lote,
-    usuario,
-  });
+    const usuario = await this.userRepo.findOne({
+      where: { id: dto.usuarioId }
+    });
+    if (!usuario) throw new NotFoundException('Usuario no encontrado');
 
-  const resultado = await this.muerteRepo.save(muerte);
+    const muerte = this.muerteRepo.create({
+      fecha: dto.fecha,
+      cantidad: dto.cantidad,
+      causa: dto.causa,
+      lote,
+      usuario,
+    });
 
-  // Descontar del lote
-  await this.loteRepo.update(
-    { id_lote: lote.id_lote },
-    { total_gallinas: Math.max(0, (lote.total_gallinas || 0) - dto.cantidad) }
-  );
+    const resultado = await this.muerteRepo.save(muerte);
 
-  return resultado;
+    // Descontar del lote
+    await this.loteRepo.update(
+      { id_lote: lote.id_lote },
+      { total_gallinas: Math.max(0, (lote.total_gallinas || 0) - dto.cantidad) }
+    );
+
+    return resultado;
   }
 
   async update(id: number, dto: UpdateMuerteDto) {
