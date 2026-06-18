@@ -32,12 +32,8 @@ export class AlertasService {
       if (filterDto.prioridad !== undefined && filterDto.prioridad !== '') {
         where.prioridad = filterDto.prioridad;
       }
-      // Debug: imprimir valor recibido
-      console.log('DEBUG: filterDto.leida =', filterDto.leida, 'typeof =', typeof filterDto.leida);
-      // Asignar directamente si es booleano (true o false)
       if (typeof filterDto.leida === 'boolean') {
         where.leida = filterDto.leida;
-        console.log('DEBUG: where.leida asignado a =', where.leida);
       }
     }
 

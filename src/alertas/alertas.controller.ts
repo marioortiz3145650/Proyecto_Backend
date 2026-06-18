@@ -17,8 +17,6 @@ export class AlertasController {
 
   @Get()
   findAll(@Query() query: any) {
-    console.log('CONTROLLER DEBUG: query =', JSON.stringify(query));
-    
     const paginationDto: PaginationDto = {
       page: query.page ? parseInt(query.page) : 1,
       limit: query.limit ? parseInt(query.limit) : 10,
@@ -31,15 +29,12 @@ export class AlertasController {
       prioridad: query.prioridad,
     };
 
-    // Convertir leida manualmente
     if (query.leida === 'true') {
       filterDto.leida = true;
     } else if (query.leida === 'false') {
       filterDto.leida = false;
     }
 
-    console.log('CONTROLLER DEBUG: filterDto =', JSON.stringify(filterDto));
-    
     return this.alertasService.findAll(paginationDto, filterDto);
   }
 
