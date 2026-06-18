@@ -32,8 +32,12 @@ export class AlertasService {
       if (filterDto.prioridad !== undefined && filterDto.prioridad !== '') {
         where.prioridad = filterDto.prioridad;
       }
-      if (filterDto.leida !== undefined) {
+      // Debug: imprimir valor recibido
+      console.log('DEBUG: filterDto.leida =', filterDto.leida, 'typeof =', typeof filterDto.leida);
+      // Asignar directamente si es booleano (true o false)
+      if (typeof filterDto.leida === 'boolean') {
         where.leida = filterDto.leida;
+        console.log('DEBUG: where.leida asignado a =', where.leida);
       }
     }
 
@@ -81,4 +85,3 @@ export class AlertasService {
     return { message: `Alerta con ID ${id} eliminada correctamente` };
   }
 }
-

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual } from 'typeorm';
 import { CreateProduccionDto } from './dto/create-produccion.dto';
@@ -8,12 +8,14 @@ import { FilterProduccionDto } from './dto/filter-produccion.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
 import { PaginationUtil } from '../common/utils/pagination.util';
+import { UsersService } from '../usuarios/usuarios.service';
 
 @Injectable()
 export class ProduccionService {
   constructor(
     @InjectRepository(Produccion)
     private readonly produccionRepository: Repository<Produccion>,
+    private readonly usersService: UsersService,
   ) {}
 
   async create(createProduccionDto: CreateProduccionDto) {
@@ -22,6 +24,13 @@ export class ProduccionService {
       jumbo = 0, aaa = 0, aa = 0, a = 0, b = 0, c = 0, 
       lote_id, creado_por, fecha 
     } = createProduccionDto;
+
+    // Validar que el creador sea Administrador o Aprendiz
+    const user = await this.usersService.findOne(creado_por);
+    const rolNombre = typeof user.rol === 'object' ? user.rol.nombre : user.rol;
+    if (rolNombre !== 'Administrador' && rolNombre !== 'Aprendiz') {
+      throw new BadRequestException('La producción solo puede ser registrada por un Administrador o Aprendiz');
+    }
 
     // 2. Calculamos el TOTAL automáticamente
     const total = jumbo + aaa + aa + a + b + c;
@@ -120,6 +129,14 @@ export class ProduccionService {
 
   async update(id: number, updateProduccionDto: UpdateProduccionDto) {
     const produccion = await this.findOne(id);
+
+    if (updateProduccionDto.creado_por !== undefined) {
+      const user = await this.usersService.findOne(updateProduccionDto.creado_por);
+      const rolNombre = typeof user.rol === 'object' ? user.rol.nombre : user.rol;
+      if (rolNombre !== 'Administrador' && rolNombre !== 'Aprendiz') {
+        throw new BadRequestException('La producción solo puede ser registrada por un Administrador o Aprendiz');
+      }
+    }
     
     const jumbo = updateProduccionDto.jumbo !== undefined ? updateProduccionDto.jumbo : produccion.jumbo;
     const aaa = updateProduccionDto.aaa !== undefined ? updateProduccionDto.aaa : produccion.aaa;
@@ -130,22 +147,26 @@ export class ProduccionService {
 
     const total = jumbo + aaa + aa + a + b + c;
 
-    const updateData: any = {
-      ...updateProduccionDto,
-      total,
-    };
+    if (updateProduccionDto.fecha !== undefined) {
+      produccion.fecha = new Date(updateProduccionDto.fecha);
+    }
+    produccion.jumbo = jumbo;
+    produccion.aaa = aaa;
+    produccion.aa = aa;
+    produccion.a = a;
+    produccion.b = b;
+    produccion.c = c;
+    produccion.total = total;
 
     if (updateProduccionDto.lote_id !== undefined) {
-      updateData.lote = { id_lote: updateProduccionDto.lote_id };
-      delete updateData.lote_id;
+      produccion.lote = { id_lote: updateProduccionDto.lote_id } as any;
     }
 
     if (updateProduccionDto.creado_por !== undefined) {
-      updateData.creado_por = { id: updateProduccionDto.creado_por };
-      delete updateData.creado_por;
+      produccion.creado_por = { id: updateProduccionDto.creado_por } as any;
     }
 
-    await this.produccionRepository.update(id, updateData);
+    await this.produccionRepository.save(produccion);
     return this.findOne(id);
   }
 

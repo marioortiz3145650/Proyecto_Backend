@@ -104,7 +104,8 @@ export class UsersService {
   async findOne(id: string) {
     const user = await this.userRepository.findOne({
       where: { id },
-      select: ['id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro']
+      select: ['id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro'],
+      relations: ['rol']
     });
 
     if (!user) {
@@ -173,22 +174,29 @@ export class UsersService {
     }
 
     async validateUser(username: string, password: string): Promise<any> {
-        const user = await this.userRepository.findOne({
-            where: { nombre_usuario: username },
-            select: ['id', 'nombre', 'correo', 'nombre_usuario', 'contrasena_hash', 'rol', 'activo']
+      const user = await this.userRepository.findOne({
+        where: { nombre_usuario: username },
+        select: ['id', 'nombre', 'correo', 'nombre_usuario', 'contrasena_hash', 'activo'],
+        relations: ['rol'],  // ← agregar esto
+      });
+
+      if (!user) return null;
+
+      const isPasswordValid = await bcrypt.compare(password, user.contrasena_hash);
+      if (!isPasswordValid) return null;
+
+      const { contrasena_hash, ...result } = user;
+      return result;
+    }
+
+    async findGuestUser(): Promise<any> {
+        return this.userRepository.findOne({
+            where: {
+                rol: { nombre: 'Visitante' },
+                activo: true,
+            },
+            select: ['id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo'],
+            relations: ['rol'],
         });
-        
-        if (!user) {
-            return null;
-        }
-        
-        const isPasswordValid = await bcrypt.compare(password, user.contrasena_hash);
-        if (!isPasswordValid) {
-            return null;
-        }
-        
-        // Remove password from returned user object
-        const { contrasena_hash, ...result } = user;
-        return result;
     }
 }
