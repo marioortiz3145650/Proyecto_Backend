@@ -14,7 +14,6 @@ import { EstadosModule } from './estados/estados.module';
 import { MovimientosInsumoModule } from './movimientos_insumo/movimientos_insumo.module';
 import { AlertasModule } from './alertas/alertas.module';
 import { MuertesModule } from './muertes/muertes.module';
-import { InquilinosModule } from './inquilinos/inquilinos.module';
 import { AuthModule } from './auth/auth.module';
 import { SeedModule } from './seed/seed.module';
 import { TratamientosModule } from './tratamientos/tratamientos.module';
@@ -46,7 +45,6 @@ import { TratamientosModule } from './tratamientos/tratamientos.module';
     MovimientosInsumoModule,
     AlertasModule,
     MuertesModule,
-    InquilinosModule,
     AuthModule,
     SeedModule,
     TratamientosModule,

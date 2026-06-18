@@ -1,7 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Lote } from '../../lotes/entities/lote.entity';
 import { Galpon } from '../../galpones/entities/galpone.entity';
-import { Inquilino } from '../../inquilinos/entities/inquilino.entity';
 
 @Entity('alertas')
 export class Alerta {
@@ -39,8 +38,4 @@ export class Alerta {
   @ManyToOne(() => Galpon, { nullable: true })
   @JoinColumn({ name: 'galpon_id' })
   galpon?: Galpon;
-
-  @ManyToOne(() => Inquilino)
-  @JoinColumn({ name: 'inquilino_id' })
-  inquilino!: Inquilino;
 }

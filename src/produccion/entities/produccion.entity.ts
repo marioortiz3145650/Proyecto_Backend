@@ -8,7 +8,6 @@ import {
 } from 'typeorm';
 import { User } from '../../usuarios/entities/usuario.entity';
 import { Lote } from '../../lotes/entities/lote.entity';
-import { Inquilino } from '../../inquilinos/entities/inquilino.entity';
 
 @Entity('produccion')
 export class Produccion {
@@ -49,10 +48,6 @@ export class Produccion {
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'creado_por' })
   creado_por!: User;
-
-  @ManyToOne(() => Inquilino)
-  @JoinColumn({ name: 'inquilino_id' })
-  inquilino!: Inquilino;
 
   @CreateDateColumn({ name: 'fecha_registro' })
   fecha_registro!: Date;

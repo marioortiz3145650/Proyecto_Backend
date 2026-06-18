@@ -1,6 +1,5 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+/* import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RequestConInquilino } from '../inquilinos/request-inquilino.interface';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -12,7 +11,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<RequestConInquilino>();
+    const request = context.switchToHttp().getRequest();
     const user = request.user as any;
 
     if (!user) {
@@ -28,3 +27,4 @@ export class RolesGuard implements CanActivate {
     return true;
   }
 }
+ */
