@@ -5,7 +5,7 @@ import { Repository, Like, Between } from 'typeorm';
 import { Muerte } from './entities/muerte.entity';
 import { Lote } from '../lotes/entities/lote.entity';
 import { CreateMuerteDto } from './dto/create-muerte.dto';
-import { User } from 'src/usuarios/entities/usuario.entity';
+import { User } from '../usuarios/entities/usuario.entity';
 import { UpdateMuerteDto } from './dto/update-muerte.dto';
 import { FilterMuerteDto } from './dto/filter-muerte.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';

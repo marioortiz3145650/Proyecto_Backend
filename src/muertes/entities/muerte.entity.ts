@@ -6,7 +6,7 @@ import {
   JoinColumn 
 } from 'typeorm';
 import { Lote } from '../../lotes/entities/lote.entity';
-import { User } from 'src/usuarios/entities/usuario.entity';
+import { User } from '../../usuarios/entities/usuario.entity';
 
 @Entity('muertes')
 export class Muerte {

@@ -3,7 +3,7 @@ import { UsersService } from './usuarios.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersController } from './usuarios.controller';
 import { User } from './entities/usuario.entity';
-import { Rol } from 'src/roles/entities/rol.entity';
+import { Rol } from '../roles/entities/rol.entity';
 
 @Module({
   controllers: [UsersController],
