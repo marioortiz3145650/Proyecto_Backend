@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, Between } from 'typeorm';
 
@@ -11,6 +11,8 @@ import { FilterMuerteDto } from './dto/filter-muerte.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
 import { PaginationUtil } from '../common/utils/pagination.util';
+
+import { isUuid } from '../common/utils/uuid.util';
 
 @Injectable()
 export class MuertesService {
@@ -27,18 +29,22 @@ export class MuertesService {
 
   async create(dto: CreateMuerteDto) {
     const lote = await this.loteRepo.findOne({
-      where: { id_lote: dto.loteId }
+      where: { uuid: dto.loteId }
     });
     if (!lote) throw new NotFoundException('Lote no encontrado');
 
+    if (lote.fecha_fin) {
+      throw new BadRequestException('No se pueden registrar bajas en un lote finalizado');
+    }
+
     if ((lote.total_gallinas || 0) < dto.cantidad) {
-      throw new NotFoundException(
+      throw new BadRequestException(
         `El lote #${lote.id_lote} solo tiene ${lote.total_gallinas || 0} gallinas, no puedes registrar ${dto.cantidad} bajas.`
       );
     }
 
     const usuario = await this.userRepo.findOne({
-      where: { id: dto.usuarioId }
+      where: { uuid: dto.usuarioId }
     });
     if (!usuario) throw new NotFoundException('Usuario no encontrado');
 
@@ -54,57 +60,100 @@ export class MuertesService {
 
     // Descontar del lote
     await this.loteRepo.update(
-      { id_lote: lote.id_lote },
+      { uuid: lote.uuid },
       { total_gallinas: Math.max(0, (lote.total_gallinas || 0) - dto.cantidad) }
     );
 
     return resultado;
   }
 
-  async update(id: number, dto: UpdateMuerteDto) {
-    const muerteAnterior = await this.findOne(id);
+  async update(idOrUuid: string, dto: UpdateMuerteDto) {
+    const muerteAnterior = await this.findOne(idOrUuid);
     const updateData: Partial<Muerte> = {};
 
     if (dto.fecha !== undefined) updateData.fecha = dto.fecha as any;
     if (dto.causa !== undefined) updateData.causa = dto.causa;
 
+    const lote = muerteAnterior.lote;
+
+    if (lote.fecha_fin) {
+      throw new BadRequestException('No se pueden modificar registros de bajas en un lote finalizado');
+    }
+
     if (dto.cantidad !== undefined) {
       const diferencia = dto.cantidad - muerteAnterior.cantidad;
+      if (diferencia > (lote.total_gallinas || 0)) {
+        throw new BadRequestException(
+          `El lote solo tiene ${lote.total_gallinas || 0} gallinas disponibles. No puedes registrar ${diferencia} bajas adicionales.`
+        );
+      }
       updateData.cantidad = dto.cantidad;
 
-      const lote = muerteAnterior.lote;
       await this.loteRepo.update(
-        { id_lote: lote.id_lote },
+        { uuid: lote.uuid },
         { total_gallinas: Math.max(0, (lote.total_gallinas || 0) - diferencia) }
       );
     }
 
-    if (dto.loteId !== undefined) {
-      const lote = await this.loteRepo.findOne({ where: { id_lote: dto.loteId } });
-      if (!lote) throw new NotFoundException('Lote no encontrado');
-      updateData.lote = lote;
+    if (dto.loteId !== undefined && dto.loteId !== lote.uuid) {
+      const nuevoLote = await this.loteRepo.findOne({ where: { uuid: dto.loteId } });
+      if (!nuevoLote) throw new NotFoundException('Lote no encontrado');
+      if (nuevoLote.fecha_fin) {
+        throw new BadRequestException('No se pueden transferir bajas a un lote finalizado');
+      }
+
+      const cantidadFinal = dto.cantidad !== undefined ? dto.cantidad : muerteAnterior.cantidad;
+
+      // Devolver gallinas al lote anterior
+      await this.loteRepo.update(
+        { uuid: lote.uuid },
+        { total_gallinas: (lote.total_gallinas || 0) + muerteAnterior.cantidad }
+      );
+
+      // Descontar del nuevo lote
+      if ((nuevoLote.total_gallinas || 0) < cantidadFinal) {
+        // Deshacer devolución
+        await this.loteRepo.update(
+          { uuid: lote.uuid },
+          { total_gallinas: lote.total_gallinas }
+        );
+        throw new BadRequestException(
+          `El nuevo lote solo tiene ${nuevoLote.total_gallinas || 0} gallinas, no se pueden registrar ${cantidadFinal} bajas.`
+        );
+      }
+
+      await this.loteRepo.update(
+        { uuid: nuevoLote.uuid },
+        { total_gallinas: Math.max(0, (nuevoLote.total_gallinas || 0) - cantidadFinal) }
+      );
+
+      updateData.lote = nuevoLote;
     }
 
     if (dto.usuarioId !== undefined) {
-      const usuario = await this.userRepo.findOne({ where: { id: dto.usuarioId } });
+      const usuario = await this.userRepo.findOne({ where: { uuid: dto.usuarioId } });
       if (!usuario) throw new NotFoundException('Usuario no encontrado');
       updateData.usuario = usuario;
     }
 
-    await this.muerteRepo.update({ id_muerte: id }, updateData);
-    return this.findOne(id);
+    await this.muerteRepo.update({ uuid: muerteAnterior.uuid }, updateData);
+    return this.findOne(muerteAnterior.uuid);
   }
 
-  async remove(id: number) {
-    const muerte = await this.findOne(id);
+  async remove(idOrUuid: string) {
+    const muerte = await this.findOne(idOrUuid);
+
+    if (muerte.lote?.fecha_fin) {
+      throw new BadRequestException('No se pueden eliminar registros de bajas de un lote finalizado');
+    }
 
     // Devolver gallinas al lote
     await this.loteRepo.update(
-      { id_lote: muerte.lote.id_lote },
+      { uuid: muerte.lote.uuid },
       { total_gallinas: (muerte.lote.total_gallinas || 0) + muerte.cantidad }
     );
 
-    await this.muerteRepo.delete({ id_muerte: id });
+    await this.muerteRepo.delete({ uuid: muerte.uuid });
     return { message: 'Muerte eliminada correctamente' };
   }
 
@@ -123,7 +172,7 @@ export class MuertesService {
       }
 
       if (filterDto.lote) {
-        where.lote = { id_lote: filterDto.lote };
+        where.lote = { uuid: filterDto.lote };
       }
 
       if (filterDto.cantidad_min !== undefined && filterDto.cantidad_max !== undefined) {
@@ -139,7 +188,7 @@ export class MuertesService {
       }
     }
 
-    const validSortFields = ['id_muerte', 'fecha', 'cantidad'];
+    const validSortFields = ['id_muerte', 'uuid', 'fecha', 'cantidad'];
     const orderBy = validSortFields.includes(sortBy) ? sortBy : 'fecha';
 
     const [data, total] = await this.muerteRepo.findAndCount({
@@ -153,14 +202,15 @@ export class MuertesService {
     return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
-  async findOne(id: number) {
+  async findOne(idOrUuid: string) {
+    const where = isUuid(idOrUuid) ? { uuid: idOrUuid } : { id_muerte: parseInt(idOrUuid, 10) };
     const muerte = await this.muerteRepo.findOne({
-      where: { id_muerte: id },
+      where,
       relations: ['lote', 'usuario'],
     });
 
     if (!muerte) {
-      throw new NotFoundException(`Muerte con ID ${id} no encontrada`);
+      throw new NotFoundException(`Muerte con ID/UUID ${idOrUuid} no encontrada`);
     }
 
     return muerte;

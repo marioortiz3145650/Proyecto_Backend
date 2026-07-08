@@ -4,14 +4,19 @@ import {
   Column, 
   ManyToOne, 
   JoinColumn, 
-  CreateDateColumn 
+  CreateDateColumn,
+  Generated
 } from 'typeorm';
 import { User } from '../../usuarios/entities/usuario.entity';
 import { Lote } from '../../lotes/entities/lote.entity';
 
 @Entity('produccion')
 export class Produccion {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
+  uuid!: string;
+
+  @Column({ name: 'id_produccion' })
+  @Generated('increment')
   id_produccion!: number;
 
   @Column({ type: 'date' })

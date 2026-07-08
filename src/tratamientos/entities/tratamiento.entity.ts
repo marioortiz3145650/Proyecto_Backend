@@ -1,8 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Generated } from 'typeorm';
+import { Lote } from '../../lotes/entities/lote.entity';
+import { User } from '../../usuarios/entities/usuario.entity';
 
 @Entity('tratamientos')
 export class Tratamiento {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
+  uuid!: string;
+
+  @Column({ name: 'id_tratamiento' })
+  @Generated('increment')
   id_tratamiento!: number;
 
   @Column({ type: 'date' })
@@ -11,13 +17,11 @@ export class Tratamiento {
   @Column()
   tratamiento!: string;
 
-  // Relaciones (Solo los IDs por ahora para no complicar el Git)
-  @Column()
-  lote_id!: number;
+  @ManyToOne(() => Lote, { eager: true })
+  @JoinColumn({ name: 'lote_id' })
+  lote!: Lote;
 
-  @Column()
-  estado_id!: number;
-
-  @Column()
-  creado_por!: number;
-} 
+  @ManyToOne(() => User, { eager: true })
+  @JoinColumn({ name: 'creado_por' })
+  creado_por!: User;
+}

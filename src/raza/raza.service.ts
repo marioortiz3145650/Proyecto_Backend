@@ -5,6 +5,8 @@ import { Breed } from './entities/raza.entity';
 import { CreateBreedDto } from './dto/create-raza.dto';
 import { UpdateBreedDto } from './dto/update-raza.dto';
 
+import { isUuid } from '../common/utils/uuid.util';
+
 @Injectable()
 export class BreedService {
   constructor(
@@ -33,26 +35,27 @@ export class BreedService {
   async findAll(all = false) {
     return this.breedRepository.find({
       where: all ? {} : { activo: true },
-      select: ['id_raza', 'nombre_raza', 'activo', 'fecha_creacion'],
+      select: ['id_raza', 'uuid', 'nombre_raza', 'activo', 'fecha_creacion'],
       order: { nombre_raza: 'ASC' }
     });
   }
 
-  async findOne(id: number) {
+  async findOne(idOrUuid: string) {
+    const where = isUuid(idOrUuid) ? { uuid: idOrUuid } : { id_raza: parseInt(idOrUuid, 10) };
     const breed = await this.breedRepository.findOne({
-      where: { id_raza: id },
-      select: ['id_raza', 'nombre_raza', 'activo', 'fecha_creacion']
+      where,
+      select: ['id_raza', 'uuid', 'nombre_raza', 'activo', 'fecha_creacion']
     });
 
     if (!breed) {
-      throw new NotFoundException(`Raza con ID ${id} no encontrada`);
+      throw new NotFoundException(`Raza con ID/UUID ${idOrUuid} no encontrada`);
     }
 
     return breed;
   }
 
-  async update(id: number, updateBreedDto: UpdateBreedDto) {
-    const breed = await this.findOne(id);
+  async update(idOrUuid: string, updateBreedDto: UpdateBreedDto) {
+    const breed = await this.findOne(idOrUuid);
 
     // Verificar nombre duplicado si se cambia
     if (updateBreedDto.nombre_raza && updateBreedDto.nombre_raza !== breed.nombre_raza) {
@@ -65,15 +68,15 @@ export class BreedService {
       }
     }
 
-    await this.breedRepository.update({ id_raza: id }, updateBreedDto);
-    return this.findOne(id);
+    await this.breedRepository.update({ uuid: breed.uuid }, updateBreedDto);
+    return this.findOne(breed.uuid);
   }
 
-  async remove(id: number) {
-    const breed = await this.findOne(id);
+  async remove(idOrUuid: string) {
+    const breed = await this.findOne(idOrUuid);
     
     try {
-      await this.breedRepository.delete({ id_raza: id });
+      await this.breedRepository.delete({ uuid: breed.uuid });
       return { message: `Raza "${breed.nombre_raza}" eliminada correctamente` };
     } catch (error) {
       throw new ConflictException(
@@ -82,9 +85,9 @@ export class BreedService {
     }
   }
 
-  async restore(id: number) {
-    const breed = await this.findOne(id);
-    await this.breedRepository.update({ id_raza: id }, { activo: true });
+  async restore(idOrUuid: string) {
+    const breed = await this.findOne(idOrUuid);
+    await this.breedRepository.update({ uuid: breed.uuid }, { activo: true });
     return { message: `Raza "${breed.nombre_raza}" activada correctamente` };
   }
 }

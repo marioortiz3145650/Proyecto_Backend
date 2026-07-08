@@ -30,7 +30,7 @@ export class AlimentosController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.alimentosService.findOne(Number(id));
+    return this.alimentosService.findOne(id);
   }
 
   @Patch(':id')
@@ -39,12 +39,12 @@ export class AlimentosController {
     @Param('id') id: string,
     @Body() updateAlimentoDto: UpdateAlimentoDto,
   ) {
-    return this.alimentosService.update(Number(id), updateAlimentoDto);
+    return this.alimentosService.update(id, updateAlimentoDto);
   }
 
   @Delete(':id')
   @Roles('Administrador')
   remove(@Param('id') id: string) {
-    return this.alimentosService.remove(Number(id));
+    return this.alimentosService.remove(id);
   }
 }

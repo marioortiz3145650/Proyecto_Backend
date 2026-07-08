@@ -17,10 +17,10 @@ export class MovimientosInsumoService {
 
   async create(dto: CreateMovimientosInsumoDto) {
     const alimento = await this.alimentoRepo.findOne({
-      where: { id_insumo: dto.insumo_id }
+      where: { uuid: dto.insumo_id }
     });
     if (!alimento) {
-      throw new NotFoundException(`Alimento con ID ${dto.insumo_id} no encontrado`);
+      throw new NotFoundException(`Alimento con UUID ${dto.insumo_id} no encontrado`);
     }
 
     const cantidad = Number(dto.cantidad);
@@ -39,17 +39,17 @@ export class MovimientosInsumoService {
 
     await this.alimentoRepo.save(alimento);
     
-    const resultado = await this.repo.insert({
+    const nuevo = this.repo.create({
       fecha: new Date(dto.fecha),
       cantidad: dto.cantidad,
       tipo_movimiento: dto.tipo_movimiento,
       observaciones: dto.observaciones || '',
-      alimento: { id_insumo: dto.insumo_id } as any, 
-      lote: { id_lote: dto.lote_id } as any,
-      creado_por: { id: dto.creado_por } as any,
+      alimento: { uuid: dto.insumo_id } as any, 
+      lote: { uuid: dto.lote_id } as any,
+      creado_por: { uuid: dto.creado_por } as any,
     });
 
-    return resultado.identifiers[0]; 
+    return await this.repo.save(nuevo);
   }
 
   async findAll() {
@@ -58,27 +58,117 @@ export class MovimientosInsumoService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(uuid: string) {
     const movimiento = await this.repo.findOne({ 
-      where: { id_movimiento: id },
+      where: { uuid },
       relations: ['alimento', 'lote', 'creado_por']
     });
-    if (!movimiento) throw new NotFoundException(`Movimiento #${id} no encontrado`);
+    if (!movimiento) throw new NotFoundException(`Movimiento con UUID ${uuid} no encontrado`);
     return movimiento;
   }
 
-  async update(id: number, updateDto: UpdateMovimientosInsumoDto) {
-    const movimiento = await this.findOne(id);
-    const actualizado = this.repo.merge(movimiento, updateDto as any);
+  async update(uuid: string, updateDto: UpdateMovimientosInsumoDto) {
+    const movimiento = await this.findOne(uuid);
+    const updateData: any = { ...updateDto };
+
+    const cantidadAnterior = Number(movimiento.cantidad);
+    const tipoAnterior = movimiento.tipo_movimiento;
+
+    const cantidadNueva = updateDto.cantidad !== undefined ? Number(updateDto.cantidad) : cantidadAnterior;
+    const tipoNuevo = updateDto.tipo_movimiento !== undefined ? updateDto.tipo_movimiento : tipoAnterior;
+
+    const insumoIdAnterior = movimiento.alimento?.uuid;
+    const insumoIdNuevo = updateDto.insumo_id !== undefined ? updateDto.insumo_id : insumoIdAnterior;
+
+    if (insumoIdNuevo !== insumoIdAnterior) {
+      // Caso 1: Cambio de Insumo (Alimento)
+      const alimentoAnterior = await this.alimentoRepo.findOne({ where: { uuid: insumoIdAnterior } });
+      const alimentoNuevo = await this.alimentoRepo.findOne({ where: { uuid: insumoIdNuevo } });
+
+      if (!alimentoNuevo) {
+        throw new NotFoundException(`Alimento con UUID ${insumoIdNuevo} no encontrado`);
+      }
+
+      // 1. Revertir en el anterior
+      if (alimentoAnterior) {
+        const stockActualAnt = Number(alimentoAnterior.stock_actual);
+        if (tipoAnterior === 'CONSUMO' || tipoAnterior === 'SALIDA') {
+          alimentoAnterior.stock_actual = stockActualAnt + cantidadAnterior;
+        } else if (tipoAnterior === 'ENTRADA') {
+          alimentoAnterior.stock_actual = Math.max(0, stockActualAnt - cantidadAnterior);
+        }
+        await this.alimentoRepo.save(alimentoAnterior);
+      }
+
+      // 2. Aplicar en el nuevo
+      const stockActualNvo = Number(alimentoNuevo.stock_actual);
+      if (tipoNuevo === 'CONSUMO' || tipoNuevo === 'SALIDA') {
+        if (stockActualNvo < cantidadNueva) {
+          throw new ConflictException(
+            `Stock insuficiente para el nuevo alimento "${alimentoNuevo.nombre}". Stock actual: ${stockActualNvo}, solicitado: ${cantidadNueva}`
+          );
+        }
+        alimentoNuevo.stock_actual = stockActualNvo - cantidadNueva;
+      } else if (tipoNuevo === 'ENTRADA') {
+        alimentoNuevo.stock_actual = stockActualNvo + cantidadNueva;
+      }
+      await this.alimentoRepo.save(alimentoNuevo);
+
+    } else {
+      // Caso 2: Mismo Insumo (Alimento), cambio de cantidad y/o tipo
+      const alimento = await this.alimentoRepo.findOne({ where: { uuid: insumoIdAnterior } });
+      if (alimento) {
+        let stockTemporal = Number(alimento.stock_actual);
+
+        // 1. Revertir anterior temporalmente
+        if (tipoAnterior === 'CONSUMO' || tipoAnterior === 'SALIDA') {
+          stockTemporal += cantidadAnterior;
+        } else if (tipoAnterior === 'ENTRADA') {
+          stockTemporal = Math.max(0, stockTemporal - cantidadAnterior);
+        }
+
+        // 2. Aplicar nuevo
+        if (tipoNuevo === 'CONSUMO' || tipoNuevo === 'SALIDA') {
+          if (stockTemporal < cantidadNueva) {
+            throw new ConflictException(
+              `Stock insuficiente para el alimento "${alimento.nombre}". Stock actual recalculado: ${stockTemporal}, solicitado: ${cantidadNueva}`
+            );
+          }
+          alimento.stock_actual = stockTemporal - cantidadNueva;
+        } else if (tipoNuevo === 'ENTRADA') {
+          alimento.stock_actual = stockTemporal + cantidadNueva;
+        }
+
+        await this.alimentoRepo.save(alimento);
+      }
+    }
+
+    if (updateDto.fecha) {
+      updateData.fecha = new Date(updateDto.fecha);
+    }
+    if (updateDto.insumo_id) {
+      updateData.alimento = { uuid: updateDto.insumo_id };
+      delete updateData.insumo_id;
+    }
+    if (updateDto.lote_id) {
+      updateData.lote = { uuid: updateDto.lote_id };
+      delete updateData.lote_id;
+    }
+    if (updateDto.creado_por) {
+      updateData.creado_por = { uuid: updateDto.creado_por };
+      delete updateData.creado_por;
+    }
+
+    const actualizado = this.repo.merge(movimiento, updateData);
     return await this.repo.save(actualizado);
   }
 
-  async remove(id: number) {
-    const movimiento = await this.findOne(id);
+  async remove(uuid: string) {
+    const movimiento = await this.findOne(uuid);
 
     if (movimiento.alimento) {
       const alimento = await this.alimentoRepo.findOne({
-        where: { id_insumo: movimiento.alimento.id_insumo }
+        where: { uuid: movimiento.alimento.uuid }
       });
       if (alimento) {
         const cantidad = Number(movimiento.cantidad);

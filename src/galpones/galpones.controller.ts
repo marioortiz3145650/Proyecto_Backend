@@ -32,22 +32,22 @@ export class GalponesController {
   }
 
   @Get('lote/:loteId')
-  findByLote(@Param('loteId', ParseIntPipe) loteId: number) {
+  findByLote(@Param('loteId') loteId: string) {
     return this.galponesService.findByLote(loteId);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.galponesService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateGalponDto: any) {
+  update(@Param('id') id: string, @Body() updateGalponDto: any) {
     return this.galponesService.update(id, updateGalponDto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.galponesService.remove(id);
   }
 }

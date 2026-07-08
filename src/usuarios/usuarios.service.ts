@@ -22,9 +22,9 @@ export class UsersService {
 
   async create(createUsuarioDto: CreateUsuarioDto) {
     // Verificar que el rol existe
-    const rol = await this.rolRepository.findOneBy({ id: createUsuarioDto.rol });
+    const rol = await this.rolRepository.findOneBy({ uuid: createUsuarioDto.rol });
     if (!rol) {
-      throw new NotFoundException(`Rol con ID ${createUsuarioDto.rol} no encontrado`);
+      throw new NotFoundException(`Rol con ID/UUID ${createUsuarioDto.rol} no encontrado`);
     }
 
     // Hashear contraseña
@@ -38,13 +38,6 @@ export class UsersService {
     });
 
     return this.userRepository.save(user);
-  }
-
-  async findActive() {
-    return this.userRepository.find({
-      where: { activo: true },
-      select: ['id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro']
-    });
   }
 
   async findAll(
@@ -70,7 +63,7 @@ export class UsersService {
       }
 
       if (filterDto.rol) {
-        where.rol = { id: filterDto.rol };
+        where.rol = { uuid: filterDto.rol };
       }
 
       if (filterDto.activo !== undefined) {
@@ -86,12 +79,12 @@ export class UsersService {
       }
     }
 
-    const validSortFields = ['id', 'nombre', 'correo', 'nombre_usuario', 'activo', 'fecha_registro'];
+    const validSortFields = ['id', 'uuid', 'nombre', 'correo', 'nombre_usuario', 'activo', 'fecha_registro'];
     const orderBy = validSortFields.includes(sortBy) ? sortBy : 'nombre';
 
     const [data, total] = await this.userRepository.findAndCount({
       where,
-      select: ['id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro'],
+      select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro'],
       relations: ['rol'],
       skip,
       take: limit,
@@ -101,22 +94,24 @@ export class UsersService {
     return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
-  async findOne(id: string) {
+  async findOne(idOrUuid: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrUuid);
+    const where = isUuid ? { uuid: idOrUuid } : { id: parseInt(idOrUuid, 10) };
     const user = await this.userRepository.findOne({
-      where: { id },
-      select: ['id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro'],
+      where,
+      select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro'],
       relations: ['rol']
     });
 
     if (!user) {
-      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+      throw new NotFoundException(`Usuario con ID/UUID ${idOrUuid} no encontrado`);
     }
 
     return user;
   }
 
-  async update(id: string, updateUsuarioDto: UpdateUsuarioDto) {
-    await this.findOne(id);
+  async update(idOrUuid: string, updateUsuarioDto: UpdateUsuarioDto) {
+    const user = await this.findOne(idOrUuid);
 
     // Preparar datos de actualización
     const updateData: Partial<User> = {};
@@ -133,10 +128,6 @@ export class UsersService {
       updateData.nombre_usuario = updateUsuarioDto.nombre_usuario;
     }
 
-    if (updateUsuarioDto.activo !== undefined) {
-      updateData.activo = updateUsuarioDto.activo;
-    }
-
     // Si viene contraseña, hashearla
     if (updateUsuarioDto.contraseña) {
       updateData.contrasena_hash = await bcrypt.hash(updateUsuarioDto.contraseña, 10);
@@ -144,39 +135,35 @@ export class UsersService {
 
     // Si viene rol, verificar que existe
     if (updateUsuarioDto.rol) {
-      const rol = await this.rolRepository.findOneBy({ id: updateUsuarioDto.rol });
+      const rol = await this.rolRepository.findOneBy({ uuid: updateUsuarioDto.rol });
       if (!rol) {
-        throw new NotFoundException(`Rol con ID ${updateUsuarioDto.rol} no encontrado`);
+        throw new NotFoundException(`Rol con ID/UUID ${updateUsuarioDto.rol} no encontrado`);
       }
       updateData.rol = rol;  // Objeto completo
     }
 
-    await this.userRepository.update({ id }, updateData);
-    return this.findOne(id);
+    await this.userRepository.update({ uuid: user.uuid }, updateData);
+    return this.findOne(user.uuid);
   }
 
-  async activate(id: string) {
-    await this.findOne(id);
-    await this.userRepository.update({ id }, { activo: true });
-    return { message: 'Usuario activado correctamente' };
+  async findActive() {
+    return this.userRepository.find({
+      where: { activo: true },
+      select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro'],
+      relations: ['rol']
+    });
   }
 
-  async deactivate(id: string) {
-    await this.findOne(id);
-    await this.userRepository.update({ id }, { activo: false });
-    return { message: 'Usuario desactivado correctamente' };
+  async remove(idOrUuid: string) {
+    const user = await this.findOne(idOrUuid);
+    await this.userRepository.delete({ uuid: user.uuid });
+    return { message: 'Usuario eliminado permanentemente' };
   }
-
-    async remove(id: string) {
-        await this.findOne(id);
-        await this.userRepository.delete({ id });
-        return { message: 'Usuario eliminado permanentemente' };
-    }
 
     async validateUser(username: string, password: string): Promise<any> {
       const user = await this.userRepository.findOne({
         where: { nombre_usuario: username },
-        select: ['id', 'nombre', 'correo', 'nombre_usuario', 'contrasena_hash', 'activo'],
+        select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'contrasena_hash', 'activo'],
         relations: ['rol'],  // ← agregar esto
       });
 
@@ -195,7 +182,7 @@ export class UsersService {
                 rol: { nombre: 'Visitante' },
                 activo: true,
             },
-            select: ['id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo'],
+            select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo'],
             relations: ['rol'],
         });
     }

@@ -16,9 +16,9 @@ export class UpdateMuerteDto extends PartialType(CreateMuerteDto) {
     @MaxLength(255)
     causa?: string;
 
-    @IsInt()
+    @IsString()
     @IsOptional()
-    loteId?: number;
+    loteId?: string;
 
     @IsString()
     @IsOptional()

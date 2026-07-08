@@ -2,14 +2,12 @@ import { IsOptional, IsInt, Min, IsBoolean, IsString } from 'class-validator';
 
 export class FilterLoteDto {
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  raza?: number;
+  @IsString()
+  raza?: string;
 
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  raza_id?: number;
+  @IsString()
+  raza_id?: string;
 
   @IsOptional()
   @IsInt()

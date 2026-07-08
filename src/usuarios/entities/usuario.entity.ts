@@ -5,14 +5,19 @@ import {
   CreateDateColumn, 
   UpdateDateColumn,
   ManyToOne,
-  JoinColumn
+  JoinColumn,
+  Generated
 } from 'typeorm';
 import { Rol } from '../../roles/entities/rol.entity';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
+  uuid!: string;
+
+  @Column({ name: 'id_numeric' })
+  @Generated('increment')
+  id!: number;
 
   @Column('text')
   nombre!: string;

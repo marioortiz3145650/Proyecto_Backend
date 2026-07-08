@@ -1,4 +1,4 @@
-import { IsDateString, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsDateString, IsInt, IsOptional, IsUUID, Min, IsString } from 'class-validator';
 
 export class CreateProduccionDto {
   @IsDateString()
@@ -36,8 +36,8 @@ export class CreateProduccionDto {
 
   // El total lo calcularemos en el service, no hace falta pedirlo
   
-  @IsInt() // Recuerda que el ID de Lote es un número
-  lote_id!: number;
+  @IsString()
+  lote_id!: string;
 
   @IsUUID() // El ID de usuario es un string (UUID)
   creado_por!: string;

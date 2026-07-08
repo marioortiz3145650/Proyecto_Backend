@@ -1,11 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Generated } from 'typeorm';
 import { User } from '../../usuarios/entities/usuario.entity';
 import { Lote } from '../../lotes/entities/lote.entity';
 import { Alimento } from '../../alimentos/entities/alimento.entity';
 
 @Entity('movimientos_insumo')
 export class MovimientosInsumo {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
+  uuid!: string;
+
+  @Column({ name: 'id_movimiento' })
+  @Generated('increment')
   id_movimiento!: number;
 
   @Column({ type: 'date' })

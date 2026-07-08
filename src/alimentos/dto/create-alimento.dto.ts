@@ -5,11 +5,11 @@ export class CreateAlimentoDto {
   @IsString()
   nombre!: string;
 
-  @IsInt()
-  tipo_alimento_id!: number;
+  @IsString()
+  tipo_alimento_id!: string;
 
-  @IsInt()
-  unidad_medida_id!: number;
+  @IsString()
+  unidad_medida_id!: string;
 
   @IsNumber()
   stock_actual!: number;

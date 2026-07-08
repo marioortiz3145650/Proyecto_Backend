@@ -35,23 +35,23 @@ export class LotesController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.lotesService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateLoteDto: UpdateLoteDto) {
+  update(@Param('id') id: string, @Body() updateLoteDto: UpdateLoteDto) {
     return this.lotesService.update(id, updateLoteDto);
   }
 
   @Post(':id/toggle')
   @HttpCode(HttpStatus.OK)
-  toggleActivo(@Param('id', ParseIntPipe) id: number) {
+  toggleActivo(@Param('id') id: string) {
     return this.lotesService.toggleActivo(id);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.lotesService.remove(id);
   }
 }

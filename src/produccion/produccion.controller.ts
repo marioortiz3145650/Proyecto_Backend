@@ -29,13 +29,13 @@ export class ProduccionController {
 
   @Patch(':id')
   @Roles('Administrador', 'Aprendiz')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateProduccionDto: UpdateProduccionDto) {
+  update(@Param('id') id: string, @Body() updateProduccionDto: UpdateProduccionDto) {
     return this.produccionService.update(id, updateProduccionDto);
   }
 
   @Delete(':id')
   @Roles('Administrador', 'Aprendiz')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.produccionService.remove(id);
   }
 }

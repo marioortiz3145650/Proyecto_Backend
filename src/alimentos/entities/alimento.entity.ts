@@ -1,11 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Generated } from 'typeorm';
 import { UnidadMedida } from '../../unidades_de_medida/entities/unidades_de_medida.entity';
 import { TipoDeAlimento } from '../../tipo_de_alimento/entities/tipo_de_alimento.entity';
 
 @Entity('alimento')
 export class Alimento {
 
-  @PrimaryGeneratedColumn({ name: 'id_insumo' })
+  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
+  uuid!: string;
+
+  @Column({ name: 'id_insumo' })
+  @Generated('increment')
   id_insumo!: number;
 
   @Column({ type: 'varchar', length: 100 })

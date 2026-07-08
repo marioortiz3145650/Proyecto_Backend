@@ -13,26 +13,19 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get('active')
+  async findActive() {
+    return this.usersService.findActive();
+  }
+
   @Post()
   @Roles('Administrador')
   create(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.usersService.create(createUsuarioDto);
   }
 
-  @Post(':id/deactivate')  // ✅ POST /users/:id/deactivate
-  @Roles('Administrador')
-  @HttpCode(HttpStatus.OK)
-  deactivate(@Param('id', ParseUUIDPipe) id: string) {
-    return this.usersService.deactivate(id);
-  }
-
-  @Post(':id/activate')  // ✅ POST /users/:id/activate
-  @Roles('Administrador')
-  @HttpCode(HttpStatus.OK)
-  activate(@Param('id', ParseUUIDPipe) id: string) {
-    return this.usersService.activate(id);
-  }
   @Get()
+  @Roles('Administrador')
   findAll(
     @Query() paginationDto: PaginationDto,
     @Query() filterDto: FilterUsuarioDto,
@@ -41,6 +34,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @Roles('Administrador')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
@@ -53,8 +47,7 @@ export class UsersController {
 
   @Delete(':id')
   @Roles('Administrador')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
+  remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
 }
-

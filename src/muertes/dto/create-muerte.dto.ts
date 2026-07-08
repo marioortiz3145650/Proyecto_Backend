@@ -1,4 +1,4 @@
-import { IsDateString, IsInt, IsString, Min, IsUUID } from 'class-validator';
+import { IsDateString, IsInt, IsString, Min, IsUUID, IsNotEmpty } from 'class-validator';
 
 export class CreateMuerteDto {
   @IsDateString()
@@ -14,7 +14,7 @@ export class CreateMuerteDto {
   @IsUUID()
   usuarioId!: string;
 
-  @IsInt()
-  @Min(1)
-  loteId!: number;
+  @IsString()
+  @IsNotEmpty()
+  loteId!: string;
 }

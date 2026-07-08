@@ -2,12 +2,17 @@ import {
   Entity, 
   PrimaryGeneratedColumn, 
   Column, 
-  CreateDateColumn 
+  CreateDateColumn,
+  Generated
 } from 'typeorm';
 
 @Entity('razas')
 export class Breed {
-  @PrimaryGeneratedColumn({ name: 'id_raza' })
+  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
+  uuid!: string;
+
+  @Column({ name: 'id_raza' })
+  @Generated('increment')
   id_raza!: number;
 
   @Column('varchar', { 

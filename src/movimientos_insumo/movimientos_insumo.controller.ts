@@ -19,16 +19,16 @@ export class MovimientosInsumoController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.movimientosInsumoService.findOne(+id);
+    return this.movimientosInsumoService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateMovimientosInsumoDto: UpdateMovimientosInsumoDto) {
-    return this.movimientosInsumoService.update(+id, updateMovimientosInsumoDto);
+    return this.movimientosInsumoService.update(id, updateMovimientosInsumoDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.movimientosInsumoService.remove(+id);
+    return this.movimientosInsumoService.remove(id);
   }
 }

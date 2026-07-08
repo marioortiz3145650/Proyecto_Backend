@@ -6,9 +6,8 @@ export class FilterMuerteDto {
   fecha?: string;
 
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  lote?: number;
+  @IsString()
+  lote?: string;
 
   @IsOptional()
   @IsInt()

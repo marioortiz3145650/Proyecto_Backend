@@ -4,13 +4,18 @@ import {
   Column, 
   ManyToOne,
   JoinColumn,
-  CreateDateColumn 
+  CreateDateColumn,
+  Generated
 } from 'typeorm';
 import { Lote } from '../../lotes/entities/lote.entity';
 
 @Entity('galpones')
 export class Galpon {
-  @PrimaryGeneratedColumn({ name: 'id_galpon' })
+  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
+  uuid!: string;
+
+  @Column({ name: 'id_galpon' })
+  @Generated('increment')
   id_galpon!: number;
 
   @Column('varchar', { length: 50 })
