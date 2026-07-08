@@ -10,7 +10,6 @@ import { AlimentosModule } from './alimentos/alimentos.module';
 import { UnidadesDeMedidaModule } from './unidades_de_medida/unidades_de_medida.module';
 import { TipoDeAlimentosModule } from './tipo_de_alimento/tipo_de_alimento.module';
 import { ProduccionModule } from './produccion/produccion.module';
-import { EstadosModule } from './estados/estados.module';
 import { MovimientosInsumoModule } from './movimientos_insumo/movimientos_insumo.module';
 import { AlertasModule } from './alertas/alertas.module';
 import { MuertesModule } from './muertes/muertes.module';
@@ -31,7 +30,9 @@ import { VisionModule } from './vision/vision.module';
       username: process.env.USER_NAME,
       password: process.env.DB_PASSWORD,
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: false,
+      migrationsRun: true,
+      migrations: [__dirname + '/migrations/*{.ts,.js}'],
     }),
     UsersModule,
     RolsModule,
@@ -42,7 +43,6 @@ import { VisionModule } from './vision/vision.module';
     UnidadesDeMedidaModule,
     TipoDeAlimentosModule,
     ProduccionModule,
-    EstadosModule,
     MovimientosInsumoModule,
     AlertasModule,
     MuertesModule,

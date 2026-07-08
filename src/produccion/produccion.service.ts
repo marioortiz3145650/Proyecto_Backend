@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual } from 'typeorm';
 import { CreateProduccionDto } from './dto/create-produccion.dto';
@@ -9,6 +9,8 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
 import { PaginationUtil } from '../common/utils/pagination.util';
 import { UsersService } from '../usuarios/usuarios.service';
+import { LotesService } from '../lotes/lotes.service';
+import { isUuid } from '../common/utils/uuid.util';
 
 @Injectable()
 export class ProduccionService {
@@ -16,26 +18,32 @@ export class ProduccionService {
     @InjectRepository(Produccion)
     private readonly produccionRepository: Repository<Produccion>,
     private readonly usersService: UsersService,
+    private readonly lotesService: LotesService,
   ) {}
 
   async create(createProduccionDto: CreateProduccionDto) {
-    // 1. Extraemos los valores o les ponemos 0 si vienen vacíos
     const { 
       jumbo = 0, aaa = 0, aa = 0, a = 0, b = 0, c = 0, 
       lote_id, creado_por, fecha 
     } = createProduccionDto;
 
-    // Validar que el creador sea Administrador o Aprendiz
+    if (!isUuid(creado_por)) {
+      throw new BadRequestException('El usuario creador no es válido');
+    }
+
     const user = await this.usersService.findOne(creado_por);
     const rolNombre = typeof user.rol === 'object' ? user.rol.nombre : user.rol;
     if (rolNombre !== 'Administrador' && rolNombre !== 'Aprendiz') {
       throw new BadRequestException('La producción solo puede ser registrada por un Administrador o Aprendiz');
     }
 
-    // 2. Calculamos el TOTAL automáticamente
+    const lote = await this.lotesService.findOne(lote_id);
+    if (lote.fecha_fin) {
+      throw new BadRequestException('No se puede registrar producción en un lote finalizado');
+    }
+
     const total = jumbo + aaa + aa + a + b + c;
 
-    // 3. Creamos el objeto para la base de datos
     const nuevaProduccion = this.produccionRepository.create({
       fecha,
       jumbo,
@@ -44,12 +52,11 @@ export class ProduccionService {
       a,
       b,
       c,
-      total, // Aquí va la suma automática
-      lote: { id_lote: lote_id }, // Relación con el ID del Lote (number)
-      creado_por: { id: creado_por }, // Relación con el UUID del Usuario
+      total,
+      lote: { uuid: lote_id },
+      creado_por: { uuid: creado_por },
     });
 
-    // 4. Guardamos en Postgres
     return await this.produccionRepository.save(nuevaProduccion);
   }
 
@@ -68,7 +75,7 @@ export class ProduccionService {
       }
 
       if (filterDto.lote) {
-        where.lote = { id_lote: filterDto.lote };
+        where.lote = { uuid: filterDto.lote };
       }
 
       if (filterDto.jumbo_min !== undefined) {
@@ -100,7 +107,7 @@ export class ProduccionService {
       }
     }
 
-    const validSortFields = ['id_produccion', 'fecha', 'total', 'jumbo', 'aaa', 'aa', 'a', 'b', 'c'];
+    const validSortFields = ['id_produccion', 'uuid', 'fecha', 'total', 'jumbo', 'aaa', 'aa', 'a', 'b', 'c'];
     const orderBy = validSortFields.includes(sortBy) ? sortBy : 'fecha';
 
     const [data, total] = await this.produccionRepository.findAndCount({
@@ -114,28 +121,43 @@ export class ProduccionService {
     return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
-  async findOne(id: number) {
+  async findOne(idOrUuid: string) {
+    const where = isUuid(idOrUuid) ? { uuid: idOrUuid } : { id_produccion: parseInt(idOrUuid, 10) };
     const produccion = await this.produccionRepository.findOne({
-      where: { id_produccion: id },
+      where,
       relations: ['lote', 'creado_por'],
     });
 
     if (!produccion) {
-      throw new Error(`Producción con ID ${id} no encontrada`);
+      throw new NotFoundException(`Producción con ID/UUID ${idOrUuid} no encontrada`);
     }
 
     return produccion;
   }
 
-  async update(id: number, updateProduccionDto: UpdateProduccionDto) {
-    const produccion = await this.findOne(id);
+  async update(idOrUuid: string, updateProduccionDto: UpdateProduccionDto) {
+    const produccion = await this.findOne(idOrUuid);
+
+    // Si el lote actual está cerrado, no permitir edición de producción
+    if (produccion.lote?.fecha_fin) {
+      throw new BadRequestException('No se puede modificar la producción de un lote finalizado');
+    }
 
     if (updateProduccionDto.creado_por !== undefined) {
-      const user = await this.usersService.findOne(updateProduccionDto.creado_por);
+      const creadoPor = typeof updateProduccionDto.creado_por === 'string'
+        ? updateProduccionDto.creado_por
+        : (updateProduccionDto.creado_por as any)?.uuid;
+
+      if (!isUuid(creadoPor)) {
+        throw new BadRequestException('El usuario creador no es válido');
+      }
+
+      const user = await this.usersService.findOne(creadoPor);
       const rolNombre = typeof user.rol === 'object' ? user.rol.nombre : user.rol;
       if (rolNombre !== 'Administrador' && rolNombre !== 'Aprendiz') {
         throw new BadRequestException('La producción solo puede ser registrada por un Administrador o Aprendiz');
       }
+      produccion.creado_por = { uuid: creadoPor } as any;
     }
     
     const jumbo = updateProduccionDto.jumbo !== undefined ? updateProduccionDto.jumbo : produccion.jumbo;
@@ -158,20 +180,23 @@ export class ProduccionService {
     produccion.c = c;
     produccion.total = total;
 
-    if (updateProduccionDto.lote_id !== undefined) {
-      produccion.lote = { id_lote: updateProduccionDto.lote_id } as any;
-    }
-
-    if (updateProduccionDto.creado_por !== undefined) {
-      produccion.creado_por = { id: updateProduccionDto.creado_por } as any;
+    if (updateProduccionDto.lote_id !== undefined && updateProduccionDto.lote_id !== produccion.lote?.uuid) {
+      const nuevoLote = await this.lotesService.findOne(updateProduccionDto.lote_id);
+      if (nuevoLote.fecha_fin) {
+        throw new BadRequestException('No se puede transferir producción a un lote finalizado');
+      }
+      produccion.lote = nuevoLote;
     }
 
     await this.produccionRepository.save(produccion);
-    return this.findOne(id);
+    return this.findOne(produccion.uuid);
   }
 
-  async remove(id: number) {
-    const produccion = await this.findOne(id);
+  async remove(idOrUuid: string) {
+    const produccion = await this.findOne(idOrUuid);
+    if (produccion.lote?.fecha_fin) {
+      throw new BadRequestException('No se puede eliminar la producción de un lote finalizado');
+    }
     return await this.produccionRepository.remove(produccion);
   }
 }

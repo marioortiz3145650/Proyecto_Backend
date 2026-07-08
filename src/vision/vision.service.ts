@@ -7,19 +7,17 @@ export class VisionService implements OnModuleDestroy {
   private readonly logger = new Logger(VisionService.name);
   private pythonProcess: ChildProcess | null = null;
 
-  startCamera(cameraIndex: number) {
-    // Detener cualquier cámara en ejecución previa de forma síncrona e inmediata
+  async startCamera(cameraIndex: number) {
     if (this.pythonProcess) {
       this.logger.log('Deteniendo cámara previa antes de iniciar una nueva...');
-      this.stopCamera();
+      await this.stopCamera();
     }
 
     const scriptPath = path.resolve(__dirname, 'weight_detector.py');
     this.logger.log(`Iniciando detector de peso (Python) con cámara index ${cameraIndex} desde ${scriptPath}`);
 
-    // Lanzar proceso secundario de Python
     const child = spawn('python', [scriptPath, '--camera', String(cameraIndex)], {
-      detached: false, // Se matará si el proceso principal finaliza
+      detached: false,
     });
 
     child.stdout.on('data', (data) => {
@@ -42,28 +40,51 @@ export class VisionService implements OnModuleDestroy {
     return { status: 'success', message: `Cámara ${cameraIndex} iniciada correctamente.` };
   }
 
-  stopCamera() {
-    if (this.pythonProcess) {
-      const pid = this.pythonProcess.pid;
-      this.logger.log(`Deteniendo proceso de Python con PID ${pid}...`);
+  stopCamera(): Promise<{ status: string; message: string }> {
+    if (!this.pythonProcess) {
+      return Promise.resolve({ status: 'success', message: 'La cámara ya estaba detenida.' });
+    }
+
+    const proc = this.pythonProcess;
+    const pid = proc.pid;
+    this.logger.log(`Deteniendo proceso de Python con PID ${pid}...`);
+
+    return new Promise((resolve) => {
+      const onClose = () => {
+        this.logger.log(`Proceso ${pid} confirmado como cerrado, cámara liberada.`);
+        this.pythonProcess = null;
+        resolve({ status: 'success', message: 'Cámara detenida correctamente.' });
+      };
+
+      // Esperar el cierre real del proceso antes de resolver, así el driver
+      // libera el handle de la cámara antes de que se abra el siguiente.
+      proc.once('close', onClose);
+
       try {
         if (process.platform === 'win32') {
-          // Fuerza de terminación síncrona en Windows
           execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
         } else {
-          this.pythonProcess.kill('SIGKILL');
+          proc.kill('SIGKILL');
         }
-      } catch (error) {
-        this.logger.error(`Error al detener el proceso ${pid}: ${error.message}`);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.error(`Error al detener el proceso ${pid}: ${message}`);
       }
-      this.pythonProcess = null;
-      return { status: 'success', message: 'Cámara detenida correctamente.' };
-    }
-    return { status: 'success', message: 'La cámara ya estaba detenida.' };
+
+      // Salvavidas: si 'close' nunca llega, no dejar la promesa colgada para siempre
+      setTimeout(() => {
+        if (this.pythonProcess && this.pythonProcess.pid === pid) {
+          this.logger.warn(`Timeout esperando cierre del proceso ${pid}, forzando limpieza.`);
+          proc.off('close', onClose);
+          this.pythonProcess = null;
+          resolve({ status: 'success', message: 'Cámara detenida (timeout).' });
+        }
+      }, 3000);
+    });
   }
 
   onModuleDestroy() {
     this.logger.log('Módulo destruido. Asegurando el apagado de la cámara...');
-    this.stopCamera();
+    void this.stopCamera();
   }
 }

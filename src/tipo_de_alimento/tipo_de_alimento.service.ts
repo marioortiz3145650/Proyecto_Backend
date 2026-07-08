@@ -27,11 +27,11 @@ export class TipoDeAlimentosService {
   }
 
   async update(id: number, dto: UpdateTipoDeAlimentoDto) {
-    await this.tipoRepository.update(id, dto);
+    await this.tipoRepository.update({ id_tipo_insumo: id }, dto);
     return this.findOne(id);
   }
 
   async remove(id: number) {
-    return await this.tipoRepository.delete(id);
+    return await this.tipoRepository.delete({ id_tipo_insumo: id });
   }
 }

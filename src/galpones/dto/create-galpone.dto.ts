@@ -18,8 +18,7 @@ export class CreateGalponDto {
   @MaxLength(255)
   direccion!: string;
 
-  @IsInt()
-  @Min(1)
+  @IsString()
   @IsOptional()
-  lote?: number;
+  lote?: string;
 }

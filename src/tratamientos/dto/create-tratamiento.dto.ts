@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 
 export class CreateTratamientoDto {
   @IsString()
@@ -9,12 +9,11 @@ export class CreateTratamientoDto {
   @IsNotEmpty()
   tratamiento!: string;
 
-  @IsInt()
-  lote_id!: number;
+  @IsString()
+  @IsNotEmpty()
+  lote_id!: string;
 
-  @IsInt()
-  estado_id!: number;
-
-  @IsInt()
-  creado_por!: number;
-}
+  @IsString()
+  @IsNotEmpty()
+  creado_por!: string;
+}

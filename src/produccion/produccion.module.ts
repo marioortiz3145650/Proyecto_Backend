@@ -4,12 +4,13 @@ import { ProduccionService } from './produccion.service';
 import { ProduccionController } from './produccion.controller';
 import { Produccion } from './entities/produccion.entity'; // Importante
 import { UsersModule } from '../usuarios/usuarios.module';
+import { LotesModule } from '../lotes/lotes.module';
 
 @Module({
   imports: [
-    // Esta línea le dice a Nest: "Usa esta entidad para crear la tabla en Postgres"
     TypeOrmModule.forFeature([Produccion]),
-    UsersModule
+    UsersModule,
+    LotesModule
   ],
   controllers: [ProduccionController],
   providers: [ProduccionService],

@@ -9,6 +9,7 @@ import { FilterGalponDto } from './dto/filter-galpon.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
 import { PaginationUtil } from '../common/utils/pagination.util';
+import { isUuid } from '../common/utils/uuid.util';
 
 @Injectable()
 export class GalponesService {
@@ -21,8 +22,9 @@ export class GalponesService {
 
     async create(createGalponDto: CreateGalponDto) {
     if (createGalponDto.lote) {
+      const loteWhere = isUuid(String(createGalponDto.lote)) ? { uuid: String(createGalponDto.lote) } : { id_lote: parseInt(String(createGalponDto.lote), 10) };
       const lote = await this.loteRepository.findOne({
-        where: { id_lote: createGalponDto.lote }
+        where: loteWhere
       });
 
       if (!lote) {
@@ -64,12 +66,12 @@ export class GalponesService {
         where.direccion = Like(`%${filterDto.direccion}%`);
       }
       if (filterDto.lote) {
-        where.lote = { id_lote: filterDto.lote };
+        where.lote = isUuid(String(filterDto.lote)) ? { uuid: String(filterDto.lote) } : { id_lote: parseInt(String(filterDto.lote), 10) };
       }
     }
 
     // Validar campo de ordenamiento
-    const validSortFields = ['nombre', 'direccion', 'fecha_creacion'];
+    const validSortFields = ['nombre', 'uuid', 'direccion', 'fecha_creacion'];
     const orderBy = validSortFields.includes(sortBy) ? sortBy : 'nombre';
 
     const [data, total] = await this.galponRepository.findAndCount({
@@ -83,28 +85,30 @@ export class GalponesService {
     return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
-  async findOne(id: number) {
+  async findOne(idOrUuid: string) {
+    const where = isUuid(idOrUuid) ? { uuid: idOrUuid } : { id_galpon: parseInt(idOrUuid, 10) };
     const galpon = await this.galponRepository.findOne({
-      where: { id_galpon: id },
+      where,
       relations: ['lote'],
     });
 
     if (!galpon) {
-      throw new NotFoundException(`Galpón con ID ${id} no encontrado`);
+      throw new NotFoundException(`Galpón con ID/UUID ${idOrUuid} no encontrado`);
     }
 
     return galpon;
   }
 
-  async findByLote(loteId: number) {
+  async findByLote(loteIdOrUuid: string) {
+    const loteWhere = isUuid(loteIdOrUuid) ? { uuid: loteIdOrUuid } : { id_lote: parseInt(loteIdOrUuid, 10) };
     return this.galponRepository.find({
-      where: { lote: { id_lote: loteId } },
+      where: { lote: loteWhere },
       relations: ['lote'],
     });
   }
 
-  async update(id: number, updateGalponDto: UpdateGalponDto) {
-    const galpon = await this.findOne(id);
+  async update(idOrUuid: string, updateGalponDto: UpdateGalponDto) {
+    const galpon = await this.findOne(idOrUuid);
 
     const updateData: Partial<Galpon> = {};
 
@@ -118,8 +122,9 @@ export class GalponesService {
 
     // Si viene lote, verificar que existe
     if (updateGalponDto.lote) {
+      const loteWhere = isUuid(String(updateGalponDto.lote)) ? { uuid: String(updateGalponDto.lote) } : { id_lote: parseInt(String(updateGalponDto.lote), 10) };
       const lote = await this.loteRepository.findOne({
-        where: { id_lote: updateGalponDto.lote }
+        where: loteWhere
       });
 
       if (!lote) {
@@ -129,13 +134,13 @@ export class GalponesService {
       updateData.lote = lote; 
     }
 
-    await this.galponRepository.update({ id_galpon: id }, updateData);
-    return this.findOne(id);
+    await this.galponRepository.update({ uuid: galpon.uuid }, updateData);
+    return this.findOne(galpon.uuid);
   }
 
-  async remove(id: number) {
-    const galpon = await this.findOne(id);
-    await this.galponRepository.delete({ id_galpon: id });
+  async remove(idOrUuid: string) {
+    const galpon = await this.findOne(idOrUuid);
+    await this.galponRepository.delete({ uuid: galpon.uuid });
     return { message: `Galpón "${galpon.nombre}" eliminado correctamente` };
   }
 }

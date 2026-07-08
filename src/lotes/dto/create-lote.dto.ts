@@ -5,19 +5,18 @@ import {
   IsNotEmpty, 
   Min, 
   Max, 
-  IsOptional 
+  IsOptional,
+  IsString
 } from 'class-validator';
 
 export class CreateLoteDto {
-  @IsInt()
-  @Min(1)
   @IsOptional()
-  raza?: number;
+  @IsString()
+  raza?: string;
 
-  @IsInt()
-  @Min(1)
   @IsOptional()
-  raza_id?: number;
+  @IsString()
+  raza_id?: string;
 
   @IsInt()
   @Min(0)

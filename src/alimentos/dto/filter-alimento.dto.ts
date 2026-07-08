@@ -6,14 +6,12 @@ export class FilterAlimentoDto {
   nombre?: string;
 
   @IsOptional()
-  @IsNumber()
-  @Min(1)
-  tipo_alimento?: number;
+  @IsString()
+  tipo_alimento?: string;
 
   @IsOptional()
-  @IsNumber()
-  @Min(1)
-  unidad_medida?: number;
+  @IsString()
+  unidad_medida?: string;
 
   @IsOptional()
   @IsNumber()

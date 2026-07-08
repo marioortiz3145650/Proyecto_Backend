@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateAlimentoDto } from './dto/create-alimento.dto';
 import { UpdateAlimentoDto } from './dto/update-alimento.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,6 +8,8 @@ import { FilterAlimentoDto } from './dto/filter-alimento.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
 import { PaginationUtil } from '../common/utils/pagination.util';
+
+import { isUuid } from '../common/utils/uuid.util';
 
 @Injectable()
 export class AlimentosService {
@@ -21,8 +23,8 @@ export class AlimentosService {
     const { tipo_alimento_id, unidad_medida_id, ...rest } = createAlimentoDto;
     const alimento = this.alimentoRepository.create({
       ...rest,
-      tipo_alimento: { id_tipo_insumo: tipo_alimento_id } as any,
-      unidad_medida: { id_unidad: unidad_medida_id } as any,
+      tipo_alimento: { uuid: tipo_alimento_id } as any,
+      unidad_medida: { uuid: unidad_medida_id } as any,
     });
     return await this.alimentoRepository.save(alimento);
   }
@@ -42,11 +44,11 @@ export class AlimentosService {
       }
 
       if (filterDto.tipo_alimento) {
-        where.tipo_alimento = { id_tipo_insumo: filterDto.tipo_alimento };
+        where.tipo_alimento = { uuid: filterDto.tipo_alimento };
       }
 
       if (filterDto.unidad_medida) {
-        where.unidad_medida = { id_unidad: filterDto.unidad_medida };
+        where.unidad_medida = { uuid: filterDto.unidad_medida };
       }
 
       if (filterDto.stock_actual_min !== undefined && filterDto.stock_actual_max !== undefined) {
@@ -70,7 +72,7 @@ export class AlimentosService {
       }
     }
 
-    const validSortFields = ['id_insumo', 'nombre', 'stock_actual', 'stock_minimo', 'precio_unitario'];
+    const validSortFields = ['id_insumo', 'uuid', 'nombre', 'stock_actual', 'stock_minimo', 'precio_unitario'];
     const orderBy = validSortFields.includes(sortBy) ? sortBy : 'nombre';
 
     const [data, total] = await this.alimentoRepository.findAndCount({
@@ -84,27 +86,41 @@ export class AlimentosService {
     return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
-  async findOne(id: number) {
-    return await this.alimentoRepository.findOne({
-      where: { id_insumo: id },
+  async findOne(idOrUuid: string) {
+    const where = isUuid(idOrUuid) ? { uuid: idOrUuid } : { id_insumo: parseInt(idOrUuid, 10) };
+    const alimento = await this.alimentoRepository.findOne({
+      where,
       relations: ['tipo_alimento', 'unidad_medida'],
     });
+    if (!alimento) {
+      throw new NotFoundException(`Alimento con ID/UUID ${idOrUuid} no encontrado`);
+    }
+    return alimento;
   }
 
-  async update(id: number, updateAlimentoDto: UpdateAlimentoDto) {
+  async update(idOrUuid: string, updateAlimentoDto: UpdateAlimentoDto) {
+    const alimento = await this.findOne(idOrUuid);
     const { tipo_alimento_id, unidad_medida_id, ...rest } = updateAlimentoDto;
     const updateData: any = { ...rest };
     if (tipo_alimento_id !== undefined) {
-      updateData.tipo_alimento = { id_tipo_insumo: tipo_alimento_id };
+      updateData.tipo_alimento = { uuid: tipo_alimento_id };
     }
     if (unidad_medida_id !== undefined) {
-      updateData.unidad_medida = { id_unidad: unidad_medida_id };
+      updateData.unidad_medida = { uuid: unidad_medida_id };
     }
-    await this.alimentoRepository.update(id, updateData);
-    return this.findOne(id);
+    await this.alimentoRepository.update({ uuid: alimento.uuid }, updateData);
+    return this.alimentoRepository.findOne({ where: { uuid: alimento.uuid }, relations: ['tipo_alimento', 'unidad_medida'] });
   }
 
-  async remove(id: number) {
-    return await this.alimentoRepository.delete(id);
+  async remove(idOrUuid: string) {
+    const alimento = await this.findOne(idOrUuid);
+    try {
+      return await this.alimentoRepository.remove(alimento);
+    } catch (error: any) {
+      if (error.code === '23503' || String(error.message).includes('foreign key constraint')) {
+        throw new BadRequestException('No se puede eliminar el alimento porque tiene registros de consumo asociados. Elimine primero los consumos correspondientes.');
+      }
+      throw error;
+    }
   }
 }

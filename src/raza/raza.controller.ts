@@ -36,26 +36,26 @@ export class BreedController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.breedService.findOne(id);
   }
 
   @Patch(':id')
   @Roles('Administrador', 'Aprendiz')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateBreedDto: UpdateBreedDto) {
+  update(@Param('id') id: string, @Body() updateBreedDto: UpdateBreedDto) {
     return this.breedService.update(id, updateBreedDto);
   }
 
   @Delete(':id')
   @Roles('Administrador', 'Aprendiz')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.breedService.remove(id);
   }
 
   @Post(':id/restore')
   @Roles('Administrador', 'Aprendiz')
   @HttpCode(HttpStatus.OK)
-  restore(@Param('id', ParseIntPipe) id: number) {
+  restore(@Param('id') id: string) {
     return this.breedService.restore(id);
   }
 }

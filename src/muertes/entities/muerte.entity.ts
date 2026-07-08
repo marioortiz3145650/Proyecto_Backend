@@ -3,7 +3,8 @@ import {
   PrimaryGeneratedColumn, 
   Column, 
   ManyToOne, 
-  JoinColumn 
+  JoinColumn,
+  Generated
 } from 'typeorm';
 import { Lote } from '../../lotes/entities/lote.entity';
 import { User } from '../../usuarios/entities/usuario.entity';
@@ -11,7 +12,11 @@ import { User } from '../../usuarios/entities/usuario.entity';
 @Entity('muertes')
 export class Muerte {
 
-  @PrimaryGeneratedColumn({ name: 'id_muerte' })
+  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
+  uuid!: string;
+
+  @Column({ name: 'id_muerte' })
+  @Generated('increment')
   id_muerte!: number;
 
   @Column('date')

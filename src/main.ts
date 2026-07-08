@@ -17,6 +17,20 @@ async function bootstrap() {
       },
     }),
   );
+
+  app.useGlobalFilters({
+    catch(exception: any, host: any) {
+      const status = exception.getStatus ? exception.getStatus() : 500;
+      const message = exception.message || 'Error interno del servidor';
+      const response = host.switchToHttp().getResponse();
+      const details = exception.stack || message;
+      console.error('Unhandled exception:', details);
+      response.status(status).json({
+        message,
+        ...(process.env.NODE_ENV !== 'production' && { stack: details }),
+      });
+    },
+  } as any);
   
   await app.listen(process.env.PORT ?? 3000);
 }

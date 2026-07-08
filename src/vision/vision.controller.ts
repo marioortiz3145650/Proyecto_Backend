@@ -9,14 +9,14 @@ export class VisionController {
 
   @Post('start')
   @HttpCode(HttpStatus.OK)
-  start(@Body() body: { cameraIndex?: number }) {
+  async start(@Body() body: { cameraIndex?: number }) {
     const cameraIndex = body.cameraIndex !== undefined ? Number(body.cameraIndex) : 0;
     return this.visionService.startCamera(cameraIndex);
   }
 
   @Post('stop')
   @HttpCode(HttpStatus.OK)
-  stop() {
+  async stop() {
     return this.visionService.stopCamera();
   }
 }

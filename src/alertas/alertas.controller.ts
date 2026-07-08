@@ -40,16 +40,16 @@ export class AlertasController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.alertasService.findOne(+id);
+    return this.alertasService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAlertaDto: UpdateAlertaDto) {
-    return this.alertasService.update(+id, updateAlertaDto);
+    return this.alertasService.update(id, updateAlertaDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.alertasService.remove(+id);
+    return this.alertasService.remove(id);
   }
 }

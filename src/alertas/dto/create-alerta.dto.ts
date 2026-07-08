@@ -14,10 +14,10 @@ export class CreateAlertaDto {
   prioridad!: string;
 
   @IsOptional()
-  @IsInt()
-  lote_id?: number;
+  @IsString()
+  lote_id?: string;
 
   @IsOptional()
-  @IsInt()
-  galpon_id?: number;
+  @IsString()
+  galpon_id?: string;
 }

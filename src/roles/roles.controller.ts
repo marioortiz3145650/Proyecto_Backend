@@ -29,19 +29,19 @@ export class RolsController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id') id: string) {
     return this.rolesService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateRolDto: UpdateRolDto) {
+  update(@Param('id') id: string, @Body() updateRolDto: UpdateRolDto) {
     return this.rolesService.update(id, updateRolDto);
   }
 
   
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
+  remove(@Param('id') id: string) {
     return this.rolesService.remove(id);
   }
 }

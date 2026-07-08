@@ -5,14 +5,19 @@ import {
   ManyToOne, 
   JoinColumn,
   OneToMany,
-  CreateDateColumn 
+  CreateDateColumn,
+  Generated
 } from 'typeorm';
 import { Breed } from '../../raza/entities/raza.entity';
 import { Galpon } from '../../galpones/entities/galpone.entity';
 
 @Entity('lotes')
 export class Lote {
-  @PrimaryGeneratedColumn({ name: 'id_lote' })
+  @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
+  uuid!: string;
+
+  @Column({ name: 'id_lote' })
+  @Generated('increment')
   id_lote!: number;
 
   @ManyToOne(() => Breed, { eager: true, nullable: true })

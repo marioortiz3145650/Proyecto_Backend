@@ -17,13 +17,13 @@ export class CreateMovimientosInsumoDto {
   @IsOptional()
   observaciones?: string;
 
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  insumo_id!: number;
+  insumo_id!: string;
 
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  lote_id!: number;
+  lote_id!: string;
 
   @IsString()
   @IsNotEmpty()

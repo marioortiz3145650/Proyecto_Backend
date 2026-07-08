@@ -27,11 +27,11 @@ export class UnidadesDeMedidaService {
   }
 
   async update(id: number, dto: UpdateUnidadesDeMedidaDto) {
-    await this.unidadRepository.update(id, dto);
+    await this.unidadRepository.update({ id_unidad: id }, dto);
     return this.findOne(id);
   }
 
   async remove(id: number) {
-    return await this.unidadRepository.delete(id);
+    return await this.unidadRepository.delete({ id_unidad: id });
   }
 }

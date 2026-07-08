@@ -9,6 +9,7 @@ import { FilterLoteDto } from './dto/filter-lote.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
 import { PaginationUtil } from '../common/utils/pagination.util';
+import { isUuid } from '../common/utils/uuid.util';
 
 @Injectable()
 export class LotesService {
@@ -25,8 +26,9 @@ async create(createLoteDto: CreateLoteDto) {
   const razaId = createLoteDto.raza || createLoteDto.raza_id;
 
   if (razaId) {
+    const breedWhere = isUuid(String(razaId)) ? { uuid: String(razaId) } : { id_raza: parseInt(String(razaId), 10) };
     breed = await this.breedRepository.findOne({
-      where: { id_raza: razaId }
+      where: breedWhere
     });
 
     if (!breed) {
@@ -63,7 +65,7 @@ async create(createLoteDto: CreateLoteDto) {
     if (filterDto) {
       const razaId = filterDto.raza || filterDto.raza_id;
       if (razaId) {
-        where.raza = { id_raza: razaId };
+        where.raza = isUuid(String(razaId)) ? { uuid: String(razaId) } : { id_raza: parseInt(String(razaId), 10) };
       }
 
       if (filterDto.edad_semanas !== undefined) {
@@ -95,7 +97,7 @@ async create(createLoteDto: CreateLoteDto) {
       }
     }
 
-    const validSortFields = ['id_lote', 'edad_semanas', 'fecha_inicio', 'fecha_fin', 'fecha_creacion'];
+    const validSortFields = ['id_lote', 'uuid', 'edad_semanas', 'fecha_inicio', 'fecha_fin', 'fecha_creacion'];
     const orderBy = validSortFields.includes(sortBy) ? sortBy : 'id_lote';
 
     const [data, total] = await this.loteRepository.findAndCount({
@@ -109,21 +111,22 @@ async create(createLoteDto: CreateLoteDto) {
     return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
-  async findOne(id: number) {
+  async findOne(idOrUuid: string) {
+    const where = isUuid(idOrUuid) ? { uuid: idOrUuid } : { id_lote: parseInt(idOrUuid, 10) };
     const lote = await this.loteRepository.findOne({
-      where: { id_lote: id },
+      where,
       relations: ['raza', 'galpones'],
     });
 
     if (!lote) {
-      throw new NotFoundException(`Lote con ID ${id} no encontrado`);
+      throw new NotFoundException(`Lote con ID/UUID ${idOrUuid} no encontrado`);
     }
 
     return lote;
   }
 
-  async update(id: number, updateLoteDto: UpdateLoteDto) {
-  const lote = await this.findOne(id);
+  async update(idOrUuid: string, updateLoteDto: UpdateLoteDto) {
+  const lote = await this.findOne(idOrUuid);
 
 
   const updateData: Partial<Lote> = {};
@@ -149,8 +152,9 @@ async create(createLoteDto: CreateLoteDto) {
 
   const razaId = updateLoteDto.raza || updateLoteDto.raza_id;
   if (razaId) {
+    const breedWhere = isUuid(String(razaId)) ? { uuid: String(razaId) } : { id_raza: parseInt(String(razaId), 10) };
     const breed = await this.breedRepository.findOne({
-      where: { id_raza: razaId }
+      where: breedWhere
     });
 
     if (!breed) {
@@ -160,28 +164,35 @@ async create(createLoteDto: CreateLoteDto) {
     updateData.raza = breed;  
   }
 
-  await this.loteRepository.update({ id_lote: id }, updateData);
-  return this.findOne(id);
+  await this.loteRepository.update({ uuid: lote.uuid }, updateData);
+  return this.findOne(lote.uuid);
 }
 
-  async remove(id: number) {
-    const lote = await this.findOne(id);
+  async remove(idOrUuid: string) {
+    const lote = await this.findOne(idOrUuid);
     
 
     if (lote.galpones && lote.galpones.length > 0) {
-      throw new BadRequestException(`No se puede eliminar el lote ${id} porque tiene ${lote.galpones.length} galpón(es) asociados`);
+      throw new BadRequestException(`No se puede eliminar el lote ${idOrUuid} porque tiene ${lote.galpones.length} galpón(es) asociados`);
     }
 
-    await this.loteRepository.delete({ id_lote: id });
-    return { message: `Lote ${id} eliminado correctamente` };
+    try {
+      await this.loteRepository.delete({ uuid: lote.uuid });
+      return { message: `Lote ${idOrUuid} eliminado correctamente` };
+    } catch (error: any) {
+      if (error.code === '23503' || String(error.message).includes('foreign key constraint')) {
+        throw new BadRequestException('No se puede eliminar el lote porque tiene registros de mortalidad o producción asociados. Elimine primero los registros vinculados.');
+      }
+      throw error;
+    }
   }
-  async toggleActivo(id: number) {
-    const lote = await this.findOne(id);
+  async toggleActivo(idOrUuid: string) {
+    const lote = await this.findOne(idOrUuid);
     const nuevoEstado = lote.fecha_fin !== null;
     await this.loteRepository.update(
-      { id_lote: id },
+      { uuid: lote.uuid },
       { fecha_fin: nuevoEstado ? null : new Date() }
     );
-    return this.findOne(id);
+    return this.findOne(lote.uuid);
   }
 }

@@ -10,7 +10,6 @@ export class FilterGalponDto {
   direccion?: string;
 
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  lote?: number;
+  @IsString()
+  lote?: string;
 }

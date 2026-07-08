@@ -8,6 +8,7 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 import { FilterAlertaDto } from './dto/filter-alerta.dto';
 import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
 import { PaginationUtil } from '../common/utils/pagination.util';
+import { isUuid } from '../common/utils/uuid.util';
 
 @Injectable()
 export class AlertasService {
@@ -37,7 +38,7 @@ export class AlertasService {
       }
     }
 
-    const validSortFields = ['id_alerta', 'titulo', 'tipo', 'prioridad', 'leida', 'fecha_creacion'];
+    const validSortFields = ['id_alerta', 'uuid', 'titulo', 'tipo', 'prioridad', 'leida', 'fecha_creacion'];
     const orderBy = validSortFields.includes(sortBy) ? sortBy : 'id_alerta';
 
     const [data, total] = await this.alertasRepository.findAndCount({
@@ -51,13 +52,14 @@ export class AlertasService {
     return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
-  async findOne(id: number): Promise<Alerta> {
+  async findOne(idOrUuid: string): Promise<Alerta> {
+    const where = isUuid(idOrUuid) ? { uuid: idOrUuid } : { id_alerta: parseInt(idOrUuid, 10) };
     const alerta = await this.alertasRepository.findOne({
-      where: { id_alerta: id },
+      where,
       relations: ['lote', 'galpon'],
     });
     if (!alerta) {
-      throw new NotFoundException(`Alerta con ID ${id} no encontrada`);
+      throw new NotFoundException(`Alerta con ID/UUID ${idOrUuid} no encontrada`);
     }
     return alerta;
   }
@@ -67,17 +69,18 @@ export class AlertasService {
     return this.alertasRepository.save(alerta);
   }
 
-  async update(id: number, updateAlertaDto: UpdateAlertaDto): Promise<Alerta> {
-    const alerta = await this.findOne(id);
+  async update(idOrUuid: string, updateAlertaDto: UpdateAlertaDto): Promise<Alerta> {
+    const alerta = await this.findOne(idOrUuid);
     Object.assign(alerta, updateAlertaDto);
     return this.alertasRepository.save(alerta);
   }
 
-  async remove(id: number): Promise<{ message: string }> {
-    const result = await this.alertasRepository.delete(id);
+  async remove(idOrUuid: string): Promise<{ message: string }> {
+    const alerta = await this.findOne(idOrUuid);
+    const result = await this.alertasRepository.delete({ uuid: alerta.uuid });
     if (result.affected === 0) {
-      throw new NotFoundException(`Alerta con ID ${id} no encontrada`);
+      throw new NotFoundException(`Alerta con ID/UUID ${idOrUuid} no encontrada`);
     }
-    return { message: `Alerta con ID ${id} eliminada correctamente` };
+    return { message: `Alerta con ID/UUID ${idOrUuid} eliminada correctamente` };
   }
 }

@@ -16,8 +16,10 @@ export class AuthService {
   async login(user: any) {
     const payload = {
       username: user.nombre_usuario,
-      sub: user.id,
+      sub: user.uuid,
       rol: user.rol?.nombre || user.rol,
+      nombre: user.nombre,
+      correo: user.correo,
     };
     return {
       access_token: this.jwtService.sign(payload),
@@ -31,8 +33,10 @@ export class AuthService {
     }
     const payload = {
       username: guestUser.nombre_usuario,
-      sub: guestUser.id,
+      sub: guestUser.uuid,
       rol: 'Visitante',
+      nombre: guestUser.nombre,
+      correo: guestUser.correo,
     };
     return {
       access_token: this.jwtService.sign(payload),
