@@ -8,7 +8,7 @@ import {
   CreateDateColumn,
   Generated
 } from 'typeorm';
-import { Breed } from '../../raza/entities/raza.entity';
+import { Raza } from '../../raza/entities/raza.entity';
 import { Galpon } from '../../galpones/entities/galpone.entity';
 
 @Entity('lotes')
@@ -20,9 +20,9 @@ export class Lote {
   @Generated('increment')
   id_lote!: number;
 
-  @ManyToOne(() => Breed, { eager: true, nullable: true })
+  @ManyToOne(() => Raza, { eager: true, nullable: true })
   @JoinColumn({ name: 'raza_id' })
-  raza!: Breed;
+  raza!: Raza;
 
   @Column('int', { name: 'edad_semanas' })
   edad_semanas!: number;

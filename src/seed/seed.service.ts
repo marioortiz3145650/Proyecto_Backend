@@ -3,6 +3,7 @@
   import { Repository, EntityManager } from 'typeorm';
   import { User } from '../usuarios/entities/usuario.entity';
   import { Rol } from '../roles/entities/rol.entity';
+  import { Setting } from '../settings/entities/setting.entity';
   import * as bcrypt from 'bcrypt';
 
   @Injectable()
@@ -14,6 +15,8 @@
       private readonly userRepository: Repository<User>,
       @InjectRepository(Rol)
       private readonly rolRepository: Repository<Rol>,
+      @InjectRepository(Setting)
+      private readonly settingRepository: Repository<Setting>,
       private readonly entityManager: EntityManager,
     ) {}
 
@@ -113,6 +116,23 @@
               await this.userRepository.delete({ uuid: u.uuid });
               this.logger.log(`Usuario extra "${u.nombre_usuario}" eliminado y sus registros reasignados a "Instructor".`);
             }
+          }
+        }
+
+        // 4. Crear settings por defecto si no existen
+        const defaultSettings = [
+          { key: 'tasa_mortalidad_max', value: '5' },
+          { key: 'postura_minima', value: '70' },
+          { key: 'stock_critico_porcentaje', value: '100' },
+          { key: 'ocupacion_maxima', value: '95' },
+        ];
+
+        for (const s of defaultSettings) {
+          const exists = await this.settingRepository.findOne({ where: { key: s.key } });
+          if (!exists) {
+            const setting = this.settingRepository.create(s);
+            await this.settingRepository.save(setting);
+            this.logger.log(`Setting "${s.key}" creado.`);
           }
         }
 

@@ -136,7 +136,8 @@ export class MuertesService {
       updateData.usuario = usuario;
     }
 
-    await this.muerteRepo.update({ uuid: muerteAnterior.uuid }, updateData);
+    this.muerteRepo.merge(muerteAnterior, updateData);
+    await this.muerteRepo.save(muerteAnterior);
     return this.findOne(muerteAnterior.uuid);
   }
 

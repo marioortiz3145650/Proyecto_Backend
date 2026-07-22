@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual, LessThanOrEqual, Not, IsNull } from 'typeorm';
 import { Lote } from './entities/lote.entity';
-import { Breed } from '../raza/entities/raza.entity';
+import { Raza } from '../raza/entities/raza.entity';
 import { CreateLoteDto } from './dto/create-lote.dto';
 import { UpdateLoteDto } from './dto/update-lote.dto';
 import { FilterLoteDto } from './dto/filter-lote.dto';
@@ -16,22 +16,22 @@ export class LotesService {
   constructor(
     @InjectRepository(Lote)
     private loteRepository: Repository<Lote>,
-    @InjectRepository(Breed)
-    private breedRepository: Repository<Breed>,
+    @InjectRepository(Raza)
+    private razaRepository: Repository<Raza>,
   ) {}
 
 
 async create(createLoteDto: CreateLoteDto) {
-  let breed: Breed | null = null;
+  let raza: Raza | null = null;
   const razaId = createLoteDto.raza || createLoteDto.raza_id;
 
   if (razaId) {
-    const breedWhere = isUuid(String(razaId)) ? { uuid: String(razaId) } : { id_raza: parseInt(String(razaId), 10) };
-    breed = await this.breedRepository.findOne({
-      where: breedWhere
+    const razaWhere = isUuid(String(razaId)) ? { uuid: String(razaId) } : { id_raza: parseInt(String(razaId), 10) };
+    raza = await this.razaRepository.findOne({
+      where: razaWhere
     });
 
-    if (!breed) {
+    if (!raza) {
       throw new NotFoundException(`Raza con ID ${razaId} no encontrada`);
     }
   }
@@ -45,8 +45,8 @@ async create(createLoteDto: CreateLoteDto) {
   };
 
 
-  if (breed) {
-    loteData.raza = breed;
+  if (raza) {
+    loteData.raza = raza;
   }
 
   const lote = this.loteRepository.create(loteData);
@@ -152,19 +152,20 @@ async create(createLoteDto: CreateLoteDto) {
 
   const razaId = updateLoteDto.raza || updateLoteDto.raza_id;
   if (razaId) {
-    const breedWhere = isUuid(String(razaId)) ? { uuid: String(razaId) } : { id_raza: parseInt(String(razaId), 10) };
-    const breed = await this.breedRepository.findOne({
-      where: breedWhere
+    const razaWhere = isUuid(String(razaId)) ? { uuid: String(razaId) } : { id_raza: parseInt(String(razaId), 10) };
+    const raza = await this.razaRepository.findOne({
+      where: razaWhere
     });
 
-    if (!breed) {
+    if (!raza) {
       throw new NotFoundException(`Raza con ID ${razaId} no encontrada`);
     }
 
-    updateData.raza = breed;  
+    updateData.raza = raza;  
   }
 
-  await this.loteRepository.update({ uuid: lote.uuid }, updateData);
+  this.loteRepository.merge(lote, updateData);
+  await this.loteRepository.save(lote);
   return this.findOne(lote.uuid);
 }
 

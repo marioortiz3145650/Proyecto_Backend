@@ -1,19 +1,32 @@
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-# Instalar dependencias primero para cachear la capa de Docker
+# Cambiar las fuentes a HTTPS debido a bloqueos de red en puerto 80 e instalar dependencias
+RUN sed -i 's/http:/https:/g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get -o Acquire::https::Verify-Peer=false update && \
+    apt-get -o Acquire::https::Verify-Peer=false install -y --no-install-recommends \
+    ca-certificates \
+    python3 \
+    python3-pip \
+    python3-venv \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+
 COPY package*.json ./
 
 RUN npm install --legacy-peer-deps
 
-# Copiar el resto de los archivos de la aplicación
-COPY . .
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir --break-system-packages torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
+    pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
-# Compilar la aplicación de NestJS
+COPY . .
 RUN npm run build
 
 EXPOSE 3000
+EXPOSE 5000
 
-# Comando para arrancar el servidor en producción
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
+

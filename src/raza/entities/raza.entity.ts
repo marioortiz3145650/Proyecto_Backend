@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 
 @Entity('razas')
-export class Breed {
+export class Raza {
   @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
   uuid!: string;
 

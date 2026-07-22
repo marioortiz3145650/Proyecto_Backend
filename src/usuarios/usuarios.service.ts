@@ -142,7 +142,8 @@ export class UsersService {
       updateData.rol = rol;  // Objeto completo
     }
 
-    await this.userRepository.update({ uuid: user.uuid }, updateData);
+    this.userRepository.merge(user, updateData);
+    await this.userRepository.save(user);
     return this.findOne(user.uuid);
   }
 

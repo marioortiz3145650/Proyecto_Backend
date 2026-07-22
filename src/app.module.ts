@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './usuarios/usuarios.module';
 import { RolsModule } from './roles/roles.module';
-import { BreedModule } from './raza/raza.module';
+import { RazaModule } from './raza/raza.module';
 import { LotesModule } from './lotes/lotes.module';
 import { GalponesModule } from './galpones/galpones.module';
 import { AlimentosModule } from './alimentos/alimentos.module';
@@ -17,6 +17,8 @@ import { AuthModule } from './auth/auth.module';
 import { SeedModule } from './seed/seed.module';
 import { TratamientosModule } from './tratamientos/tratamientos.module';
 import { VisionModule } from './vision/vision.module';
+import { ReportesModule } from './reportes/reportes.module';
+import { SettingsModule } from './settings/settings.module';
 
 
 @Module({
@@ -36,7 +38,7 @@ import { VisionModule } from './vision/vision.module';
     }),
     UsersModule,
     RolsModule,
-    BreedModule,
+    RazaModule,
     LotesModule,
     GalponesModule,
     AlimentosModule,
@@ -50,6 +52,8 @@ import { VisionModule } from './vision/vision.module';
     SeedModule,
     TratamientosModule,
     VisionModule,
+    ReportesModule,
+    SettingsModule,
   ],
   controllers: [],
   providers: [],

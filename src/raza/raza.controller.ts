@@ -12,50 +12,50 @@ import {
   Query,
   UseGuards
 } from '@nestjs/common';
-import { BreedService } from './raza.service';
-import { CreateBreedDto } from './dto/create-raza.dto';
-import { UpdateBreedDto } from './dto/update-raza.dto';
+import { RazaService } from './raza.service';
+import { CreateRazaDto } from './dto/create-raza.dto';
+import { UpdateRazaDto } from './dto/update-raza.dto';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('breed')
 @UseGuards(JwtAuthGuard, RolesGuard)
-export class BreedController {
-  constructor(private readonly breedService: BreedService) {}
+export class RazaController {
+  constructor(private readonly razaService: RazaService) {}
 
   @Post()
   @Roles('Administrador')
-  create(@Body() createBreedDto: CreateBreedDto) {
-    return this.breedService.create(createBreedDto);
+  create(@Body() createRazaDto: CreateRazaDto) {
+    return this.razaService.create(createRazaDto);
   }
 
   @Get()
   findAll(@Query('all') all?: string) {
-    return this.breedService.findAll(all === 'true');
+    return this.razaService.findAll(all === 'true');
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.breedService.findOne(id);
+    return this.razaService.findOne(id);
   }
 
   @Patch(':id')
   @Roles('Administrador', 'Aprendiz')
-  update(@Param('id') id: string, @Body() updateBreedDto: UpdateBreedDto) {
-    return this.breedService.update(id, updateBreedDto);
+  update(@Param('id') id: string, @Body() updateRazaDto: UpdateRazaDto) {
+    return this.razaService.update(id, updateRazaDto);
   }
 
   @Delete(':id')
   @Roles('Administrador', 'Aprendiz')
   remove(@Param('id') id: string) {
-    return this.breedService.remove(id);
+    return this.razaService.remove(id);
   }
 
   @Post(':id/restore')
   @Roles('Administrador', 'Aprendiz')
   @HttpCode(HttpStatus.OK)
   restore(@Param('id') id: string) {
-    return this.breedService.restore(id);
+    return this.razaService.restore(id);
   }
 }
