@@ -108,8 +108,9 @@ export class AlimentosService {
     if (unidad_medida_id !== undefined) {
       updateData.unidad_medida = { uuid: unidad_medida_id };
     }
-    await this.alimentoRepository.update({ uuid: alimento.uuid }, updateData);
-    return this.alimentoRepository.findOne({ where: { uuid: alimento.uuid }, relations: ['tipo_alimento', 'unidad_medida'] });
+    this.alimentoRepository.merge(alimento, updateData);
+    await this.alimentoRepository.save(alimento);
+    return this.findOne(alimento.uuid);
   }
 
   async remove(idOrUuid: string) {

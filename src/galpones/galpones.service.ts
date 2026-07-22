@@ -134,7 +134,8 @@ export class GalponesService {
       updateData.lote = lote; 
     }
 
-    await this.galponRepository.update({ uuid: galpon.uuid }, updateData);
+    this.galponRepository.merge(galpon, updateData);
+    await this.galponRepository.save(galpon);
     return this.findOne(galpon.uuid);
   }
 

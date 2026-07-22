@@ -1,3 +1,5 @@
+import sys
+import platform
 import cv2
 import numpy as np
 import easyocr
@@ -7,6 +9,9 @@ import threading
 import argparse
 from datetime import datetime
 from flask import Flask, Response, jsonify, request
+
+IS_WINDOWS = platform.system() == 'Windows'
+CAP_BACKEND = cv2.CAP_DSHOW if IS_WINDOWS else cv2.CAP_V4L2
 
 parser = argparse.ArgumentParser(description="Detector de Peso por OCR y Cámara")
 parser.add_argument("--camera", type=int, default=0, help="Index de la cámara (0, 1, 2, etc.)")
@@ -215,7 +220,7 @@ def open_camera(index):
     with cap_lock:
         if cap is not None and cap.isOpened():
             cap.release()
-        new_cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
+        new_cap = cv2.VideoCapture(index, CAP_BACKEND)
         cap = new_cap
         return cap.isOpened()
 
@@ -491,14 +496,45 @@ def switch_camera():
 
 @app.route('/list_cameras', methods=['GET'])
 def list_cameras():
-    """Devuelve índices reales con su nombre físico (Windows, vía DirectShow)."""
+    """Devuelve índices reales con su nombre físico (Windows DirectShow o Linux V4L2)."""
+    global camera_index, cap
     cameras = []
-    for i in range(5):
-        test_cap = cv2.VideoCapture(i, cv2.CAP_DSHOW)
-        if test_cap.isOpened():
-            name = "Cámara USB" if i == 0 else ("Cámara PC" if i == 1 else f"Cámara {i}")
-            cameras.append({"index": i, "name": name})
-            test_cap.release()
+    
+    # 1. Intentar obtener nombres físicos reales por sistema operativo
+    if platform.system() == 'Windows':
+        try:
+            from pygrabber.dshow_graph import FilterGraph
+            devices = FilterGraph().get_input_devices()
+            for index, name in enumerate(devices):
+                cameras.append({"index": index, "name": name})
+        except Exception:
+            pass
+    else:
+        # Linux V4L2
+        import os
+        for i in range(10):
+            sys_path = f"/sys/class/video4linux/video{i}/name"
+            if os.path.exists(sys_path):
+                try:
+                    with open(sys_path, "r") as f:
+                        name = f.read().strip()
+                    cameras.append({"index": i, "name": name})
+                except Exception:
+                    pass
+
+    # 2. Si no se detectaron cámaras o falló la consulta, usar fallback con cv2
+    if not cameras:
+        for i in range(5):
+            if i == camera_index and cap is not None and cap.isOpened():
+                name = "Cámara USB" if i == 0 else ("Cámara PC" if i == 1 else f"Cámara {i}")
+                cameras.append({"index": i, "name": name})
+                continue
+            test_cap = cv2.VideoCapture(i, CAP_BACKEND)
+            if test_cap.isOpened():
+                name = "Cámara USB" if i == 0 else ("Cámara PC" if i == 1 else f"Cámara {i}")
+                cameras.append({"index": i, "name": name})
+                test_cap.release()
+                
     return jsonify({"cameras": cameras})
 
 def generate_video_stream():

@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Breed } from './entities/raza.entity';
-import { BreedService } from './raza.service';
-import { BreedController } from './raza.controller';
+import { Raza } from './entities/raza.entity';
+import { RazaService } from './raza.service';
+import { RazaController } from './raza.controller';
 
 @Module({
-  controllers: [BreedController],
-  providers: [BreedService],
-  imports: [TypeOrmModule.forFeature([Breed])],
-  exports: [BreedService, TypeOrmModule],
+  controllers: [RazaController],
+  providers: [RazaService],
+  imports: [TypeOrmModule.forFeature([Raza])],
+  exports: [RazaService, TypeOrmModule],
 })
-export class BreedModule {}
+export class RazaModule {}

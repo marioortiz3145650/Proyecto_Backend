@@ -1,0 +1,5 @@
+flask
+opencv-python-headless
+numpy
+easyocr
+pygrabber; sys_platform == "win32"

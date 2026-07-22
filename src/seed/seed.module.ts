@@ -2,10 +2,11 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../usuarios/entities/usuario.entity';
 import { Rol } from '../roles/entities/rol.entity';
+import { Setting } from '../settings/entities/setting.entity';
 import { SeedService } from './seed.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Rol])],
+  imports: [TypeOrmModule.forFeature([User, Rol, Setting])],
   providers: [SeedService],
   exports: [SeedService],
 })

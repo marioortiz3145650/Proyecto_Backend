@@ -6,7 +6,7 @@ import {
   IsOptional 
 } from 'class-validator';
 
-export class CreateBreedDto {
+export class CreateRazaDto {
   @IsString()
   @IsNotEmpty({ message: 'El nombre de la raza es requerido' })
   @MaxLength(100, { message: 'El nombre no puede exceder los 100 caracteres' })

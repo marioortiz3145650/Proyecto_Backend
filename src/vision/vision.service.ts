@@ -13,10 +13,11 @@ export class VisionService implements OnModuleDestroy {
       await this.stopCamera();
     }
 
-    const scriptPath = path.resolve(__dirname, 'weight_detector.py');
+    const scriptPath = path.resolve(process.cwd(), 'src', 'vision', 'weight_detector.py');
     this.logger.log(`Iniciando detector de peso (Python) con cámara index ${cameraIndex} desde ${scriptPath}`);
 
-    const child = spawn('python', [scriptPath, '--camera', String(cameraIndex)], {
+    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+    const child = spawn(pythonCmd, [scriptPath, '--camera', String(cameraIndex)], {
       detached: false,
     });
 
