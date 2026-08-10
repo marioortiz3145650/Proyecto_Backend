@@ -38,33 +38,32 @@ scanned_eggs = []
 last_scanned = None
 
 roi_x = 220
-roi_y = 300
+roi_y = 370
 roi_w = 200
 roi_h = 80
 
 # Zona donde debe estar el huevo para que se capture su volumen (ajustable con /move_egg_zone)
-egg_zone_x = 210
-egg_zone_y = 60
-egg_zone_w = 220
+egg_zone_x = 160
+egg_zone_y = 20
+egg_zone_w = 350
 egg_zone_h = 220
 
 # Calibración: píxeles por milímetro real. Ajustar con /set_calibration
-px_per_mm = 1.85
+px_per_mm = 2.65
 last_ellipse = None  # ((cx,cy),(minor,major),angle) del último huevo detectado, o None
+last_hull = None     # Contorno (Convex Hull) del huevo detectado en coordenadas globales
 
 print(f"Inicializando EasyOCR con cámara index {camera_index} (esto puede demorar unos segundos)...")
 try:
     reader = easyocr.Reader(['en'], gpu=False)
     print("EasyOCR listo.")
 except Exception as e:
-    print(f"Error cargando EasyOCR: {e}. Se usará simulación de respaldo.")
+    print(f"Error cargando EasyOCR: {e}. El detector funcionará con la cámara real sin OCR.")
     reader = None
-    is_simulation = True
 
 def detect_egg_volume(frame):
-    """Detecta el contorno del huevo dentro de la zona designada y estima largo/ancho/volumen.
-    Devuelve (length_mm, width_mm, volume_cm3, ellipse) o (0,0,0,None) si no encuentra nada.
-    El ellipse devuelto ya está en coordenadas del frame completo, no de la zona recortada."""
+    """Detecta la superficie limpia del huevo (filtrando sombras) y ajusta una elipse geométrica suave.
+    Devuelve (length_mm, width_mm, volume_cm3, ellipse) o (0,0,0,None) si no encuentra nada."""
     global px_per_mm, egg_zone_x, egg_zone_y, egg_zone_w, egg_zone_h
     try:
         h_frame, w_frame = frame.shape[:2]
@@ -78,65 +77,102 @@ def detect_egg_volume(frame):
 
         zone = frame[zy:zy + zh, zx:zx + zw]
 
-        gray = cv2.cvtColor(zone, cv2.COLOR_BGR2GRAY)
-        blur = cv2.GaussianBlur(gray, (7, 7), 0)
-        _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # 1. Preprocesamiento: Median blur moderado
+        denoised = cv2.medianBlur(zone, 5)
+        gray_raw = cv2.cvtColor(zone, cv2.COLOR_BGR2GRAY)
+        gray_denoised = cv2.cvtColor(denoised, cv2.COLOR_BGR2GRAY)
 
-        # Limpiar ruido y cerrar huecos para que el contorno del huevo quede sólido
-        kernel = np.ones((5, 5), np.uint8)
-        thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-        thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        # 2. Máscara de fondo
+        border_mask = np.ones((zh, zw), dtype=bool)
+        border_mask[6:-6, 6:-6] = False
 
-        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        if not contours:
+        lab = cv2.cvtColor(denoised, cv2.COLOR_BGR2LAB).astype(np.float32)
+        L, A, B = lab[:,:,0], lab[:,:,1], lab[:,:,2]
+        
+        bg_a_mean = np.mean(A[border_mask])
+        bg_b_mean = np.mean(B[border_mask])
+
+        # Distancia cromática (canales A y B de LAB): ignora brillo L (sombras)
+        chroma_dist = np.sqrt((A - bg_a_mean)**2 + (B - bg_b_mean)**2)
+        dist_norm = cv2.normalize(chroma_dist, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+        _, mask_col = cv2.threshold(dist_norm, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+        candidate_masks = [mask_col]
+
+        # Máscara de intensidad Otsu
+        blur_gray = cv2.GaussianBlur(gray_denoised, (5, 5), 0)
+        bg_gray_mean = np.mean(gray_denoised[border_mask])
+        is_light_bg = bg_gray_mean > 110
+
+        if is_light_bg:
+            _, mask_gray_inv = cv2.threshold(blur_gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+            candidate_masks.append(mask_gray_inv)
+        else:
+            _, mask_gray_norm = cv2.threshold(blur_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            candidate_masks.append(mask_gray_norm)
+
+        # 3. Evaluación de contornos candidatos
+        best_candidate = None
+        best_score = -1.0
+        margin = 3
+
+        kernel_close = np.ones((5, 5), np.uint8)
+        kernel_open = np.ones((5, 5), np.uint8)
+
+        for mask in candidate_masks:
+            cleaned = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_close)
+            cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_OPEN, kernel_open)
+
+            contours, _ = cv2.findContours(cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            for c in contours:
+                area = cv2.contourArea(c)
+                if area < 1000 or area > (zw * zh * 0.88):
+                    continue
+
+                x, y, w, h = cv2.boundingRect(c)
+                if x <= margin or y <= margin or (x + w) >= (zw - margin) or (y + h) >= (zh - margin):
+                    continue
+
+                if len(c) < 5:
+                    continue
+
+                hull = cv2.convexHull(c)
+                hull_area = cv2.contourArea(hull)
+                if hull_area <= 0:
+                    continue
+                solidity = area / hull_area
+                if solidity < 0.80:
+                    continue
+
+                # Ajuste directo de elipse suave (fitEllipseDirect)
+                try:
+                    ellipse_candidate = cv2.fitEllipseDirect(c)
+                except Exception:
+                    ellipse_candidate = cv2.fitEllipse(c)
+
+                (minor_ax, major_ax) = ellipse_candidate[1]
+                if minor_ax <= 0:
+                    continue
+                aspect = major_ax / minor_ax
+                if aspect < 1.05 or aspect > 2.3:
+                    continue
+
+                ellipse_area = (np.pi / 4.0) * major_ax * minor_ax
+                ellipse_ratio = area / ellipse_area if ellipse_area > 0 else 0
+                if ellipse_ratio < 0.70 or ellipse_ratio > 1.30:
+                    continue
+
+                score = area * (solidity ** 2) * (1.0 - min(0.5, abs(1.0 - ellipse_ratio)))
+                if score > best_score:
+                    best_score = score
+                    best_candidate = (c, ellipse_candidate)
+
+        if best_candidate is None:
             return 0.0, 0.0, 0.0, None
 
-        best = None
-        best_score = -1
-        margin = 3  # px de tolerancia al borde de la zona
-
-        for c in contours:
-            area = cv2.contourArea(c)
-            if area < 1500 or area > (zw * zh * 0.9):
-                continue
-
-            x, y, w, h = cv2.boundingRect(c)
-            # Descarta contornos que tocan el borde de la zona (el huevo debe estar completo adentro)
-            if x <= margin or y <= margin or (x + w) >= (zw - margin) or (y + h) >= (zh - margin):
-                continue
-
-            if len(c) < 5:
-                continue
-
-            # Solidez: qué tan lleno está el contorno respecto a su cierre convexo.
-            # Un huevo real da solidez alta (~0.9+); una curva de tela o sombra da menos.
-            hull = cv2.convexHull(c)
-            hull_area = cv2.contourArea(hull)
-            if hull_area <= 0:
-                continue
-            solidity = area / hull_area
-            if solidity < 0.85:
-                continue
-
-            # Relación de aspecto razonable para un huevo (ni muy alargado ni un círculo perfecto)
-            ellipse_candidate = cv2.fitEllipse(c)
-            (minor_ax, major_ax) = ellipse_candidate[1]
-            if minor_ax <= 0:
-                continue
-            aspect = major_ax / minor_ax
-            if aspect > 2.2:
-                continue
-
-            if area > best_score:
-                best_score = area
-                best = (c, ellipse_candidate)
-
-        if best is None:
-            return 0.0, 0.0, 0.0, None
-
-        candidate, ellipse_zone = best
+        candidate, ellipse_zone = best_candidate
         (ecx, ecy), (minor_axis, major_axis), angle = ellipse_zone
-        # Trasladar el centro del ellipse a coordenadas del frame completo
+
         ellipse = ((ecx + zx, ecy + zy), (minor_axis, major_axis), angle)
 
         length_px = max(minor_axis, major_axis)
@@ -215,14 +251,34 @@ cap = None
 switch_camera_to = None  # índice pendiente de aplicar, o None si no hay cambio pedido
 
 def open_camera(index):
-    """Abre una cámara por índice liberando la anterior si existe."""
-    global cap
+    """Abre una cámara por índice liberando la anterior si existe. Si el índice no abre, busca automáticamente otras cámaras activas."""
+    global cap, camera_index
     with cap_lock:
         if cap is not None and cap.isOpened():
             cap.release()
+        
+        # Probar primero el índice solicitado
         new_cap = cv2.VideoCapture(index, CAP_BACKEND)
-        cap = new_cap
-        return cap.isOpened()
+        if new_cap.isOpened():
+            cap = new_cap
+            return True
+        
+        new_cap.release()
+
+        # Si el índice inicial falló, escanear cámaras del sistema (0..4)
+        for alt_idx in range(5):
+            if alt_idx == index:
+                continue
+            alt_cap = cv2.VideoCapture(alt_idx, CAP_BACKEND)
+            if alt_cap.isOpened():
+                print(f"Cámara en índice {index} no respondió. Se seleccionó automáticamente la cámara en índice {alt_idx}.")
+                camera_index = alt_idx
+                cap = alt_cap
+                return True
+            alt_cap.release()
+
+        cap = None
+        return False
 
 def ocr_processing_thread():
     global current_weight, current_category, is_simulation, raw_frame, roi_x, roi_y, roi_w, roi_h
@@ -338,7 +394,7 @@ def video_capture_loop():
             vol_text = f"Vol: {current_volume} cm3  L:{egg_length_mm}mm  A:{egg_width_mm}mm"
             cv2.putText(frame, vol_text, (10, 445), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 255), 2)
 
-            # Dibuja el óvalo detectado sobre el huevo real, en cian, para confirmar visualmente
+            # Dibuja la elipse geométrica suave sobre el huevo real, en cian
             if last_ellipse is not None:
                 cv2.ellipse(frame, last_ellipse, (255, 255, 0), 2)
                 (ecx, ecy), _, _ = last_ellipse

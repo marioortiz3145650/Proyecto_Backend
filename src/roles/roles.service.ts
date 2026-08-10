@@ -34,7 +34,17 @@ export class RolsService {
 
   async findOne(idOrUuid: string) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrUuid);
-    const where = isUuid ? { uuid: idOrUuid } : { id: parseInt(idOrUuid, 10) };
+    let where: any;
+    if (isUuid) {
+      where = { uuid: idOrUuid };
+    } else {
+      const parsedId = parseInt(idOrUuid, 10);
+      if (isNaN(parsedId)) {
+        throw new NotFoundException(`Rol con ID/UUID ${idOrUuid} no encontrado`);
+      }
+      where = { id: parsedId };
+    }
+
     const rol = await this.rolRepository.findOne({
       where,
       select: ['uuid', 'id', 'nombre', 'fecha_creacion']
