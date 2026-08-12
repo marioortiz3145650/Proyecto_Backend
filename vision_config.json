@@ -1,0 +1,11 @@
+{
+    "roi_x": 172,
+    "roi_y": 330,
+    "roi_w": 200,
+    "roi_h": 80,
+    "egg_zone_x": 30,
+    "egg_zone_y": 50,
+    "egg_zone_w": 350,
+    "egg_zone_h": 220,
+    "px_per_mm": 2.5
+}

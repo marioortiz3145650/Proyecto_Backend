@@ -7,6 +7,8 @@ import re
 import time
 import threading
 import argparse
+import os
+import json
 from datetime import datetime
 from flask import Flask, Response, jsonify, request
 
@@ -37,6 +39,8 @@ scan_count = 0
 scanned_eggs = []
 last_scanned = None
 
+CONFIG_FILE = "vision_config.json"
+
 roi_x = 220
 roi_y = 370
 roi_w = 200
@@ -49,7 +53,51 @@ egg_zone_w = 350
 egg_zone_h = 220
 
 # Calibración: píxeles por milímetro real. Ajustar con /set_calibration
-px_per_mm = 2.65
+px_per_mm = 2.46
+
+def load_config():
+    global roi_x, roi_y, roi_w, roi_h, egg_zone_x, egg_zone_y, egg_zone_w, egg_zone_h, px_per_mm
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r") as f:
+                cfg = json.load(f)
+                roi_x = int(cfg.get("roi_x", roi_x))
+                roi_y = int(cfg.get("roi_y", roi_y))
+                roi_w = int(cfg.get("roi_w", roi_w))
+                roi_h = int(cfg.get("roi_h", roi_h))
+                egg_zone_x = int(cfg.get("egg_zone_x", egg_zone_x))
+                egg_zone_y = int(cfg.get("egg_zone_y", egg_zone_y))
+                egg_zone_w = int(cfg.get("egg_zone_w", egg_zone_w))
+                egg_zone_h = int(cfg.get("egg_zone_h", egg_zone_h))
+                px_per_mm = float(cfg.get("px_per_mm", px_per_mm))
+                print(f"Configuración de visión cargada desde {CONFIG_FILE}: ROI({roi_x},{roi_y}), Huevo({egg_zone_x},{egg_zone_y})")
+        except Exception as e:
+            print(f"Error al cargar {CONFIG_FILE}: {e}")
+
+def save_config():
+    global roi_x, roi_y, roi_w, roi_h, egg_zone_x, egg_zone_y, egg_zone_w, egg_zone_h, px_per_mm
+    try:
+        cfg = {
+            "roi_x": roi_x,
+            "roi_y": roi_y,
+            "roi_w": roi_w,
+            "roi_h": roi_h,
+            "egg_zone_x": egg_zone_x,
+            "egg_zone_y": egg_zone_y,
+            "egg_zone_w": egg_zone_w,
+            "egg_zone_h": egg_zone_h,
+            "px_per_mm": px_per_mm
+        }
+        with open(CONFIG_FILE, "w") as f:
+            json.dump(cfg, f, indent=4)
+        return True
+    except Exception as e:
+        print(f"Error al guardar {CONFIG_FILE}: {e}")
+        return False
+
+# Cargar configuración guardada previamente si existe
+load_config()
+
 last_ellipse = None  # ((cx,cy),(minor,major),angle) del último huevo detectado, o None
 last_hull = None     # Contorno (Convex Hull) del huevo detectado en coordenadas globales
 
@@ -443,6 +491,7 @@ def set_calibration():
         return jsonify({"error": "Falta parametro px_per_mm"}), 400
     try:
         px_per_mm = round(float(value), 3)
+        save_config()
         return jsonify({"status": "ok", "px_per_mm": px_per_mm})
     except ValueError:
         return jsonify({"error": "px_per_mm invalido"}), 400
@@ -504,6 +553,7 @@ def move_roi():
         roi_x = max(0, roi_x - step)
     elif direction == "right":
         roi_x = min(640 - roi_w, roi_x + step)
+    save_config()
     return jsonify({"status": "ok", "roi_x": roi_x, "roi_y": roi_y})
 
 @app.route('/move_egg_zone', methods=['POST'])
@@ -520,6 +570,7 @@ def move_egg_zone():
         egg_zone_x = max(0, egg_zone_x - step)
     elif direction == "right":
         egg_zone_x = min(640 - egg_zone_w, egg_zone_x + step)
+    save_config()
     return jsonify({"status": "ok", "egg_zone_x": egg_zone_x, "egg_zone_y": egg_zone_y, "egg_zone_w": egg_zone_w, "egg_zone_h": egg_zone_h})
 
 @app.route('/set_egg_zone', methods=['POST'])
@@ -532,9 +583,38 @@ def set_egg_zone():
         egg_zone_y = int(data.get("y", egg_zone_y))
         egg_zone_w = int(data.get("w", egg_zone_w))
         egg_zone_h = int(data.get("h", egg_zone_h))
+        save_config()
     except (ValueError, TypeError):
         return jsonify({"error": "Parametros invalidos"}), 400
     return jsonify({"status": "ok", "egg_zone_x": egg_zone_x, "egg_zone_y": egg_zone_y, "egg_zone_w": egg_zone_w, "egg_zone_h": egg_zone_h})
+
+@app.route('/set_roi', methods=['POST'])
+def set_roi():
+    """Define la zona de la pantalla LCD completa: {x, y, w, h}"""
+    global roi_x, roi_y, roi_w, roi_h
+    data = request.json or {}
+    try:
+        roi_x = int(data.get("x", roi_x))
+        roi_y = int(data.get("y", roi_y))
+        roi_w = int(data.get("w", roi_w))
+        roi_h = int(data.get("h", roi_h))
+        save_config()
+    except (ValueError, TypeError):
+        return jsonify({"error": "Parametros invalidos"}), 400
+    return jsonify({"status": "ok", "roi_x": roi_x, "roi_y": roi_y, "roi_w": roi_w, "roi_h": roi_h})
+
+@app.route('/save_config', methods=['POST'])
+def save_config_endpoint():
+    ok = save_config()
+    if ok:
+        return jsonify({
+            "status": "ok",
+            "message": "Configuracion guardada exitosamente",
+            "roi": {"x": roi_x, "y": roi_y, "w": roi_w, "h": roi_h},
+            "egg_zone": {"x": egg_zone_x, "y": egg_zone_y, "w": egg_zone_w, "h": egg_zone_h},
+            "px_per_mm": px_per_mm
+        })
+    return jsonify({"error": "Error al guardar configuracion"}), 500
 
 @app.route('/switch_camera', methods=['POST'])
 def switch_camera():
