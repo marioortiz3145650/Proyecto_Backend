@@ -80,7 +80,6 @@
               nombre_usuario: userData.nombre_usuario,
               contrasena_hash: hashedPassword,
               rol: rol,
-              activo: true,
             });
 
             await this.userRepository.save(user);

@@ -1,0 +1,21 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 20
+      arrivalRate: 80
+
+scenarios:
+  - name: Test perfil usuario
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            nombre_usuario: "Instructor"
+            password: "admin123"
+          capture:
+            - json: "$.access_token"
+              as: "token"
+      - get:
+          url: "/auth/profile"
+          headers:
+            Authorization: "Bearer {{ token }}"

@@ -19,10 +19,6 @@ export class FilterUsuarioDto {
   rol?: number;
 
   @IsOptional()
-  @IsBoolean()
-  activo?: boolean;
-
-  @IsOptional()
   @IsString()
   fecha_registro_inicio?: string;
 
