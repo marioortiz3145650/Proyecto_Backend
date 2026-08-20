@@ -1,0 +1,21 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 20
+      arrivalRate: 5
+
+scenarios:
+  - name: Test producción carga baja
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            nombre_usuario: "Instructor"
+            password: "admin123"
+          capture:
+            - json: "$.access_token"
+              as: "token"
+      - get:
+          url: "/produccion?page=1&limit=10"
+          headers:
+            Authorization: "Bearer {{ token }}"

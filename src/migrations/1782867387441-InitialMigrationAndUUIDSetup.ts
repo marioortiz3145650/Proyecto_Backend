@@ -22,7 +22,6 @@ export class InitialMigrationAndUUIDSetup1782867387441 implements MigrationInter
                 "correo" text NOT NULL UNIQUE,
                 "nombre_usuario" text NOT NULL UNIQUE,
                 "contrasena_hash" text NOT NULL,
-                "activo" boolean NOT NULL DEFAULT true,
                 "fecha_registro" TIMESTAMP NOT NULL DEFAULT now(),
                 "fecha_actualizacion" TIMESTAMP NOT NULL DEFAULT now(),
                 "rol_id" uuid,

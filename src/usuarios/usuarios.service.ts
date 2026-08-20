@@ -66,10 +66,6 @@ export class UsersService {
         where.rol = { uuid: filterDto.rol };
       }
 
-      if (filterDto.activo !== undefined) {
-        where.activo = filterDto.activo;
-      }
-
       if (filterDto.fecha_registro_inicio && filterDto.fecha_registro_fin) {
         where.fecha_registro = Between(filterDto.fecha_registro_inicio, filterDto.fecha_registro_fin);
       } else if (filterDto.fecha_registro_inicio) {
@@ -79,12 +75,12 @@ export class UsersService {
       }
     }
 
-    const validSortFields = ['id', 'uuid', 'nombre', 'correo', 'nombre_usuario', 'activo', 'fecha_registro'];
+    const validSortFields = ['id', 'uuid', 'nombre', 'correo', 'nombre_usuario', 'fecha_registro'];
     const orderBy = validSortFields.includes(sortBy) ? sortBy : 'nombre';
 
     const [data, total] = await this.userRepository.findAndCount({
       where,
-      select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro'],
+      select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'fecha_registro'],
       relations: ['rol'],
       skip,
       take: limit,
@@ -99,7 +95,7 @@ export class UsersService {
     const where = isUuid ? { uuid: idOrUuid } : { id: parseInt(idOrUuid, 10) };
     const user = await this.userRepository.findOne({
       where,
-      select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro'],
+      select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'fecha_registro'],
       relations: ['rol']
     });
 
@@ -149,8 +145,7 @@ export class UsersService {
 
   async findActive() {
     return this.userRepository.find({
-      where: { activo: true },
-      select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo', 'fecha_registro'],
+      select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'fecha_registro'],
       relations: ['rol']
     });
   }
@@ -164,8 +159,8 @@ export class UsersService {
     async validateUser(username: string, password: string): Promise<any> {
       const user = await this.userRepository.findOne({
         where: { nombre_usuario: username },
-        select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'contrasena_hash', 'activo'],
-        relations: ['rol'],  // ← agregar esto
+        select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'contrasena_hash'],
+        relations: ['rol'],
       });
 
       if (!user) return null;
@@ -181,9 +176,8 @@ export class UsersService {
         return this.userRepository.findOne({
             where: {
                 rol: { nombre: 'Visitante' },
-                activo: true,
             },
-            select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol', 'activo'],
+            select: ['uuid', 'id', 'nombre', 'correo', 'nombre_usuario', 'rol'],
             relations: ['rol'],
         });
     }

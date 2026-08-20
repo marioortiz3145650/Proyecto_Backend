@@ -35,9 +35,6 @@ export class User {
   @JoinColumn({ name: 'rol_id' })
   rol!: Rol;
 
-  @Column('bool', { default: true }) 
-  activo!: boolean;
-
   @CreateDateColumn()
   fecha_registro!: Date;
 

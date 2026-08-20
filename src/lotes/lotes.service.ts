@@ -126,48 +126,48 @@ async create(createLoteDto: CreateLoteDto) {
   }
 
   async update(idOrUuid: string, updateLoteDto: UpdateLoteDto) {
-  const lote = await this.findOne(idOrUuid);
+    const lote = await this.findOne(idOrUuid);
 
-
-  const updateData: Partial<Lote> = {};
-
-
-  if (updateLoteDto.edad_semanas !== undefined) {
-    updateData.edad_semanas = updateLoteDto.edad_semanas;
-  }
-
-
-
-  if (updateLoteDto.fecha_inicio !== undefined) {
-    updateData.fecha_inicio = new Date(updateLoteDto.fecha_inicio);
-  }
-
-  if (updateLoteDto.fecha_fin !== undefined) {
-    updateData.fecha_fin = updateLoteDto.fecha_fin ? new Date(updateLoteDto.fecha_fin) : null;
-  }
-
-  if (updateLoteDto.total_gallinas !== undefined) {
-    updateData.total_gallinas = updateLoteDto.total_gallinas;
-  }
-
-  const razaId = updateLoteDto.raza || updateLoteDto.raza_id;
-  if (razaId) {
-    const razaWhere = isUuid(String(razaId)) ? { uuid: String(razaId) } : { id_raza: parseInt(String(razaId), 10) };
-    const raza = await this.razaRepository.findOne({
-      where: razaWhere
-    });
-
-    if (!raza) {
-      throw new NotFoundException(`Raza con ID ${razaId} no encontrada`);
+    if (lote.fecha_fin !== null) {
+      throw new BadRequestException('No se puede modificar un lote que ya ha sido cerrado.');
     }
 
-    updateData.raza = raza;  
-  }
+    const updateData: Partial<Lote> = {};
 
-  this.loteRepository.merge(lote, updateData);
-  await this.loteRepository.save(lote);
-  return this.findOne(lote.uuid);
-}
+    if (updateLoteDto.edad_semanas !== undefined) {
+      updateData.edad_semanas = updateLoteDto.edad_semanas;
+    }
+
+    if (updateLoteDto.fecha_inicio !== undefined) {
+      updateData.fecha_inicio = new Date(updateLoteDto.fecha_inicio);
+    }
+
+    if (updateLoteDto.fecha_fin !== undefined) {
+      updateData.fecha_fin = updateLoteDto.fecha_fin ? new Date(updateLoteDto.fecha_fin) : null;
+    }
+
+    if (updateLoteDto.total_gallinas !== undefined) {
+      updateData.total_gallinas = updateLoteDto.total_gallinas;
+    }
+
+    const razaId = updateLoteDto.raza || updateLoteDto.raza_id;
+    if (razaId) {
+      const razaWhere = isUuid(String(razaId)) ? { uuid: String(razaId) } : { id_raza: parseInt(String(razaId), 10) };
+      const raza = await this.razaRepository.findOne({
+        where: razaWhere
+      });
+
+      if (!raza) {
+        throw new NotFoundException(`Raza con ID ${razaId} no encontrada`);
+      }
+
+      updateData.raza = raza;  
+    }
+
+    this.loteRepository.merge(lote, updateData);
+    await this.loteRepository.save(lote);
+    return this.findOne(lote.uuid);
+  }
 
   async remove(idOrUuid: string) {
     const lote = await this.findOne(idOrUuid);
@@ -189,10 +189,12 @@ async create(createLoteDto: CreateLoteDto) {
   }
   async toggleActivo(idOrUuid: string) {
     const lote = await this.findOne(idOrUuid);
-    const nuevoEstado = lote.fecha_fin !== null;
+    if (lote.fecha_fin !== null) {
+      throw new BadRequestException('Un lote finalizado no se puede volver a activar.');
+    }
     await this.loteRepository.update(
       { uuid: lote.uuid },
-      { fecha_fin: nuevoEstado ? null : new Date() }
+      { fecha_fin: new Date() }
     );
     return this.findOne(lote.uuid);
   }

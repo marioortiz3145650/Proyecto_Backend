@@ -53,16 +53,26 @@ export class MovimientosInsumoService {
   }
 
   async findAll() {
-    return await this.repo.find({
-      relations: ['alimento', 'lote', 'creado_por'] 
-    });
+    return await this.repo
+      .createQueryBuilder('movimiento')
+      .leftJoinAndSelect('movimiento.alimento', 'alimento')
+      .leftJoinAndSelect('alimento.unidad_medida', 'unidad_medida')
+      .leftJoinAndSelect('movimiento.lote', 'lote')
+      .leftJoinAndSelect('movimiento.creado_por', 'creado_por')
+      .orderBy('movimiento.id_movimiento', 'DESC')
+      .getMany();
   }
 
   async findOne(uuid: string) {
-    const movimiento = await this.repo.findOne({ 
-      where: { uuid },
-      relations: ['alimento', 'lote', 'creado_por']
-    });
+    const movimiento = await this.repo
+      .createQueryBuilder('movimiento')
+      .leftJoinAndSelect('movimiento.alimento', 'alimento')
+      .leftJoinAndSelect('alimento.unidad_medida', 'unidad_medida')
+      .leftJoinAndSelect('movimiento.lote', 'lote')
+      .leftJoinAndSelect('movimiento.creado_por', 'creado_por')
+      .where('movimiento.uuid = :uuid', { uuid })
+      .getOne();
+
     if (!movimiento) throw new NotFoundException(`Movimiento con UUID ${uuid} no encontrado`);
     return movimiento;
   }
