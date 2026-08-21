@@ -1,0 +1,35 @@
+# romper-endpoint.yml
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 15
+      arrivalRate: 15
+      name: "Inicio suave"
+    - duration: 15
+      arrivalRate: 80
+      name: "Incremento medio"
+    - duration: 15
+      arrivalRate: 300
+      name: "Carga alta"
+    - duration: 15
+      arrivalRate: 700
+      name: "Carga máxima esperada"
+    - duration: 15
+      arrivalRate: 2000
+      name: "Ataque final"
+
+scenarios:
+  - name: Test listar galpones romper endpoint
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            nombre_usuario: "Instructor"
+            password: "admin123"
+          capture:
+            - json: "$.access_token"
+              as: "token"
+      - get:
+          url: "/galpones?page=1&limit=10"
+          headers:
+            Authorization: "Bearer {{ token }}"

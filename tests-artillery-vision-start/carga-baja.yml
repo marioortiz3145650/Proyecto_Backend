@@ -1,0 +1,24 @@
+# carga-baja.yml
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 20
+      arrivalRate: 10
+
+scenarios:
+  - name: Test iniciar visión carga baja
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            nombre_usuario: "Instructor"
+            password: "admin123"
+          capture:
+            - json: "$.access_token"
+              as: "token"
+      - post:
+          url: "/vision/start"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            cameraIndex: 0
