@@ -1,0 +1,27 @@
+# carga-media.yml
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 20
+      arrivalRate: 80
+
+scenarios:
+  - name: Test registrar producción carga media
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            nombre_usuario: "Instructor"
+            password: "admin123"
+          capture:
+            - json: "$.access_token"
+              as: "token"
+      - post:
+          url: "/produccion"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            id_lote: 1
+            fecha: "2026-08-13"
+            huevos_buenos: 100
+            huevos_rotos: 5

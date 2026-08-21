@@ -1,9 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like, Between } from 'typeorm';
 import { CreateTratamientoDto } from './dto/create-tratamiento.dto';
 import { UpdateTratamientoDto } from './dto/update-tratamiento.dto';
+import { FilterTratamientoDto } from './dto/filter-tratamiento.dto';
 import { Tratamiento } from './entities/tratamiento.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
+import { PaginationUtil } from '../common/utils/pagination.util';
+import { isUuid } from '../common/utils/uuid.util';
 
 @Injectable()
 export class TratamientosService {
@@ -19,16 +24,62 @@ export class TratamientosService {
       lote: { uuid: dto.lote_id } as any,
       creado_por: { uuid: dto.creado_por } as any,
     });
-    return await this.repo.save(nuevo);
+    const guardado = await this.repo.save(nuevo);
+    return this.findOne(guardado.uuid);
   }
 
-  async findAll() {
-    return await this.repo.find();
+  async findAll(
+    paginationDto?: PaginationDto,
+    filterDto?: FilterTratamientoDto,
+  ): Promise<PaginatedResponse<Tratamiento>> {
+    const { page = 1, limit = 10, sortBy = 'fecha', order = 'DESC' } = paginationDto || {};
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (filterDto) {
+      if (filterDto.fecha) {
+        where.fecha = filterDto.fecha;
+      }
+      if (filterDto.lote) {
+        if (isUuid(filterDto.lote)) {
+          where.lote = { uuid: filterDto.lote };
+        } else {
+          const numLote = parseInt(filterDto.lote, 10);
+          if (!isNaN(numLote)) {
+            where.lote = { id_lote: numLote };
+          }
+        }
+      }
+      if (filterDto.tratamiento) {
+        where.tratamiento = Like(`%${filterDto.tratamiento}%`);
+      }
+      if (filterDto.fecha_inicio && filterDto.fecha_fin) {
+        where.fecha = Between(filterDto.fecha_inicio, filterDto.fecha_fin);
+      }
+    }
+
+    const validSortFields = ['id_tratamiento', 'uuid', 'fecha', 'tratamiento'];
+    const orderBy = validSortFields.includes(sortBy) ? sortBy : 'fecha';
+
+    const [data, total] = await this.repo.findAndCount({
+      where,
+      relations: ['lote', 'lote.raza', 'creado_por'],
+      skip,
+      take: limit,
+      order: { [orderBy]: order },
+    });
+
+    return PaginationUtil.createPaginatedResponse(data, total, page, limit);
   }
 
-  async findOne(uuid: string) {
-    const registro = await this.repo.findOne({ where: { uuid } });
-    if (!registro) throw new NotFoundException(`Tratamiento con UUID ${uuid} no existe`);
+  async findOne(idOrUuid: string) {
+    const where = isUuid(idOrUuid) ? { uuid: idOrUuid } : { id_tratamiento: parseInt(idOrUuid, 10) };
+    const registro = await this.repo.findOne({
+      where,
+      relations: ['lote', 'lote.raza', 'creado_por'],
+    });
+    if (!registro) throw new NotFoundException(`Tratamiento con ID/UUID ${idOrUuid} no existe`);
     return registro;
   }
 
@@ -49,11 +100,13 @@ export class TratamientosService {
     }
     
     this.repo.merge(registro, updatedData);
-    return await this.repo.save(registro);
+    await this.repo.save(registro);
+    return this.findOne(registro.uuid);
   }
 
   async remove(uuid: string) {
     const registro = await this.findOne(uuid);
-    return await this.repo.remove(registro);
+    await this.repo.remove(registro);
+    return { message: 'Tratamiento eliminado correctamente' };
   }
 }

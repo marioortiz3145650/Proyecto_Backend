@@ -5,7 +5,7 @@ export class Setting {
   @PrimaryGeneratedColumn('uuid', { name: 'uuid' })
   uuid!: string;
 
-  @Column({ type: 'varchar', length: 120, unique: true })
+  @Column({ unique: true })
   key!: string;
 
   @Column({ type: 'text' })

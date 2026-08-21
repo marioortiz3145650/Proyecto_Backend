@@ -1,0 +1,22 @@
+# carga-media.yml
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 20
+      arrivalRate: 80
+
+scenarios:
+  - name: Test listar usuarios carga media
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            nombre_usuario: "Instructor"
+            password: "admin123"
+          capture:
+            - json: "$.access_token"
+              as: "token"
+      - get:
+          url: "/users?page=1&limit=10"
+          headers:
+            Authorization: "Bearer {{ token }}"

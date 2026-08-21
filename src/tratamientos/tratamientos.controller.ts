@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { TratamientosService } from './tratamientos.service';
 import { CreateTratamientoDto } from './dto/create-tratamiento.dto';
 import { UpdateTratamientoDto } from './dto/update-tratamiento.dto';
+import { FilterTratamientoDto } from './dto/filter-tratamiento.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('tratamientos')
 export class TratamientosController {
@@ -13,8 +15,11 @@ export class TratamientosController {
   }
 
   @Get()
-  findAll() {
-    return this.tratamientosService.findAll();
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: FilterTratamientoDto,
+  ) {
+    return this.tratamientosService.findAll(paginationDto, filterDto);
   }
 
   @Get(':id')

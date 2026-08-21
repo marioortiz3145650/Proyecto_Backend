@@ -1,0 +1,22 @@
+# carga-baja.yml
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 20
+      arrivalRate: 10
+
+scenarios:
+  - name: Test reporte resumen carga baja
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            nombre_usuario: "Instructor"
+            password: "admin123"
+          capture:
+            - json: "$.access_token"
+              as: "token"
+      - get:
+          url: "/reportes/resumen"
+          headers:
+            Authorization: "Bearer {{ token }}"
