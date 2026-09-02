@@ -13,11 +13,14 @@ export class VisionService implements OnModuleDestroy {
       await this.stopCamera();
     }
 
-    const scriptPath = path.resolve(process.cwd(), 'src', 'vision', 'weight_detector.py');
+    // Apuntamos al nuevo microservicio modular
+    const scriptPath = path.resolve(process.cwd(), 'Microservicio_IA', 'api.py');
     this.logger.log(`Iniciando detector de peso (Python) con cámara index ${cameraIndex} desde ${scriptPath}`);
 
     const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
-    const child = spawn(pythonCmd, [scriptPath, '--camera', String(cameraIndex)], {
+    // Se ejecuta api.py en la carpeta Microservicio_IA
+    const child = spawn(pythonCmd, ['api.py', '--camera', String(cameraIndex)], {
+      cwd: path.resolve(process.cwd(), 'Microservicio_IA'), // MUY IMPORTANTE: ejecutar en su propio directorio
       detached: false,
     });
 
@@ -57,8 +60,6 @@ export class VisionService implements OnModuleDestroy {
         resolve({ status: 'success', message: 'Cámara detenida correctamente.' });
       };
 
-      // Esperar el cierre real del proceso antes de resolver, así el driver
-      // libera el handle de la cámara antes de que se abra el siguiente.
       proc.once('close', onClose);
 
       try {
@@ -72,7 +73,6 @@ export class VisionService implements OnModuleDestroy {
         this.logger.error(`Error al detener el proceso ${pid}: ${message}`);
       }
 
-      // Salvavidas: si 'close' nunca llega, no dejar la promesa colgada para siempre
       setTimeout(() => {
         if (this.pythonProcess && this.pythonProcess.pid === pid) {
           this.logger.warn(`Timeout esperando cierre del proceso ${pid}, forzando limpieza.`);
@@ -82,6 +82,39 @@ export class VisionService implements OnModuleDestroy {
         }
       }, 3000);
     });
+  }
+
+  /**
+   * Se comunica con la API de Python para obtener el estado actual en tiempo real
+   * Se llama cuando Angular pide "Registrar Huevo"
+   */
+  async getCurrentClassification() {
+    if (!this.pythonProcess) {
+      throw new Error('La cámara no está iniciada (El microservicio de IA está apagado).');
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/current_state');
+      if (!response.ok) throw new Error('Fallo la conexión con Python');
+      
+      const state = await response.json();
+
+      if (!state.egg_detected) {
+        throw new Error('No se detectó ningún huevo en la cámara.');
+      }
+      if (!state.weight_stable) {
+        throw new Error('El peso de la báscula aún no se ha estabilizado.');
+      }
+
+      return {
+        peso: state.weight_g,
+        categoria: state.category,
+        volumen_cm3: state.volume_cm3
+      };
+    } catch (error) {
+      this.logger.error('Error al conectarse a la IA:', error);
+      throw new Error('No se pudo obtener la clasificación actual de la Inteligencia Artificial.');
+    }
   }
 
   onModuleDestroy() {

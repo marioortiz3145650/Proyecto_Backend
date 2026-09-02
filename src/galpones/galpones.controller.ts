@@ -7,18 +7,24 @@ import {
   Param, 
   Delete, 
   ParseIntPipe,
-  Query 
+  Query,
+  UseGuards
 } from '@nestjs/common';
 import { GalponesService } from './galpones.service';
 import { CreateGalponDto } from './dto/create-galpone.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { FilterGalponDto } from './dto/filter-galpon.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('galpones')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class GalponesController {
   constructor(private readonly galponesService: GalponesService) {}
 
   @Post()
+  @Roles('Administrador', 'Aprendiz')
   create(@Body() createGalponDto: CreateGalponDto) {
     return this.galponesService.create(createGalponDto);
   }
@@ -42,11 +48,13 @@ export class GalponesController {
   }
 
   @Patch(':id')
+  @Roles('Administrador')
   update(@Param('id') id: string, @Body() updateGalponDto: any) {
     return this.galponesService.update(id, updateGalponDto);
   }
 
   @Delete(':id')
+  @Roles('Administrador')
   remove(@Param('id') id: string) {
     return this.galponesService.remove(id);
   }

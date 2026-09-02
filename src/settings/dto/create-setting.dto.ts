@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateSettingDto {
   @IsString()
@@ -6,6 +6,10 @@ export class CreateSettingDto {
 
   @IsString()
   value!: string;
+
+  @IsOptional()
+  @IsUUID()
+  modificado_por?: string;
 }
 
 export class UpdateSettingDto {
@@ -16,4 +20,8 @@ export class UpdateSettingDto {
   @IsString()
   @IsOptional()
   value?: string;
+
+  @IsOptional()
+  @IsUUID()
+  modificado_por?: string;
 }

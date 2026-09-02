@@ -32,7 +32,7 @@ import { SettingsModule } from './settings/settings.module';
       username: process.env.USER_NAME,
       password: process.env.DB_PASSWORD,
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: true,
       migrationsRun: true,
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
     }),

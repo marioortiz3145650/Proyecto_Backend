@@ -41,19 +41,19 @@ export class RazaController {
   }
 
   @Patch(':id')
-  @Roles('Administrador', 'Aprendiz')
+  @Roles('Administrador')
   update(@Param('id') id: string, @Body() updateRazaDto: UpdateRazaDto) {
     return this.razaService.update(id, updateRazaDto);
   }
 
   @Delete(':id')
-  @Roles('Administrador', 'Aprendiz')
+  @Roles('Administrador')
   remove(@Param('id') id: string) {
     return this.razaService.remove(id);
   }
 
   @Post(':id/restore')
-  @Roles('Administrador', 'Aprendiz')
+  @Roles('Administrador')
   @HttpCode(HttpStatus.OK)
   restore(@Param('id') id: string) {
     return this.razaService.restore(id);

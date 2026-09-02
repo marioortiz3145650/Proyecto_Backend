@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from '../../usuarios/entities/usuario.entity';
 
 @Entity('settings')
 export class Setting {
@@ -10,6 +11,10 @@ export class Setting {
 
   @Column({ type: 'text' })
   value!: string;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'modificado_por' })
+  modificado_por?: User;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at!: Date;
