@@ -12,4 +12,26 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${USER_NAME}
     volumes:
-      - ./postgres:/var/lib/postgresql/data
+      - ./postgres:/var/lib/postgresql/data
+
+  app:
+    build: .
+    restart: unless-stopped
+    container_name: proyecto_nest_angular_app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+    volumes:
+      - ./src:/app/src
+      - ./test:/app/test
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./tsconfig.build.json:/app/tsconfig.build.json
+      - ./nest-cli.json:/app/nest-cli.json
+      - ./requirements.txt:/app/requirements.txt
+      - ./vision_config.json:/app/vision_config.json
+    depends_on:
+      - db
+    command: npm run start:dev
