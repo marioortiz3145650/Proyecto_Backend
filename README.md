@@ -1,98 +1,242 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Laying Hens - Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST desarrollada con **NestJS** para la gestión de un sistema de producción de gallinas ponedoras. Incluye módulos de autenticación JWT, gestión de galpones, lotes, alimentos, producción, alertas, tratamientos, y un microservicio de visión por computadora para el peso de huevos.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Arquitectura
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
+```
+Backend/
+├── src/                    # Código fuente de la API (NestJS)
+│   ├── auth/               # Autenticación JWT y roles
+│   ├── usuarios/           # CRUD de usuarios
+│   ├── roles/              # Gestión de roles
+│   ├── galpones/           # CRUD de galpones
+│   ├── lotes/              # CRUD de lotes
+│   ├── alimentos/          # CRUD de alimentos
+│   ├── tipo_de_alimento/   # CRUD de tipos de alimento
+│   ├── unidades_de_medida/ # CRUD de unidades de medida
+│   ├── produccion/         # Registro de producción
+│   ├── movimientos_insumo/ # Movimientos de insumos
+│   ├── alertas/            # Sistema de alertas
+│   ├── muertes/            # Registro de muertes
+│   ├── tratamientos/       # Tratamientos veterinarios
+│   ├── reportes/           # Reportes y estadísticas
+│   ├── settings/           # Configuración del sistema
+│   ├── seed/               # Datos semilla (usuarios, roles, settings)
+│   ├── vision/             # Microservicio de visión (Python)
+│   ├── database/           # Configuración de TypeORM
+│   └── migrations/         # Migraciones de base de datos
+├── test/                   # Tests E2E (Jest)
+├── Microservicio_IA/       # Archivos de visión por computadora
+├── requirements.txt        # Dependencias de Python
+├── Dockerfile              # Imagen con Node.js + Python integrado
+├── docker-compose.yml      # Orquestación de contenedores
+└── vision_config.json      # Configuración de ROI para visión
 ```
 
-## Compile and run the project
+## Prerrequisitos
+
+| Herramienta | Versión | Uso |
+|---|---|---|
+| Docker | 20.10+ | Ejecución en contenedores (recomendado) |
+| Docker Compose | 2.0+ | Orquestación con un solo comando |
+| Node.js | v20.x | Desarrollo local sin Docker |
+| npm | 10+ | Instalación de dependencias |
+| PostgreSQL | 14.3 | Base de datos (se levanta con Docker) |
+| Python 3 | 3.10+ | Microservicio de visión (incluido en Docker) |
+
+---
+
+## 🐳 Ejecución con Docker (recomendado)
+
+Todo el stack (Node.js + Python + PostgreSQL) se levanta con un solo comando. El `Dockerfile` instala automáticamente Node.js v20, Python 3, `opencv-python-headless`, `numpy`, `easyocr`, y `torch` (CPU).
+
+### Pasos
 
 ```bash
-# development
-$ npm run start
+# 1. Clonar el repositorio
+git clone https://github.com/marioortiz3145650/Proyecto_Backend.git
+cd Proyecto_Backend
 
-# watch mode
-$ npm run start:dev
+# 2. Levantar todo (construcción inicial toma ~5-10 min)
+docker-compose up -d --build
 
-# production mode
-$ npm run start:prod
+# 3. Listo. La API estará en http://localhost:3000
 ```
 
-## Run tests
+### Comandos útiles
 
 ```bash
-# unit tests
-$ npm run test
+# Ver logs en tiempo real
+docker-compose logs -f app
 
-# e2e tests
-$ npm run test:e2e
+# Ver logs solo de la base de datos
+docker-compose logs -f db
 
-# test coverage
-$ npm run test:cov
+# Detener todo
+docker-compose down
+
+# Reconstruir después de cambiar dependencias
+docker-compose up -d --build --force-recreate
 ```
 
-## Deployment
+### Puertos
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+| Servicio | Puerto Host | Puerto Contenedor | Descripción |
+|---|---|---|---|
+| Backend (NestJS) | 3000 | 3000 | API REST |
+| PostgreSQL | 5434 | 5432 | Base de datos |
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+---
+
+## 💻 Ejecución local (sin Docker)
+
+### 1. Instalar dependencias
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install --legacy-peer-deps
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+> **Nota**: El flag `--legacy-peer-deps` es necesario porque algunas dependencias del proyecto (`@types/bcrypt`, `bcrypt`) tienen conflictos de versiones con Node 20. El `Dockerfile` ya lo incluye por defecto.
 
-## Resources
+### 2. Iniciar PostgreSQL
 
-Check out a few resources that may come in handy when working with NestJS:
+Puedes usar Docker solo para la base de datos:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+docker-compose up -d db
+```
 
-## Support
+O instalar PostgreSQL 14.3 localmente y crear la base de datos `LayingHens`.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 3. Ejecutar el servidor
 
-## Stay in touch
+```bash
+# Desarrollo (con hot-reload)
+npm run start:dev
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# Producción
+npm run build
+npm run start:prod
+```
 
-## License
+### 4. Instalar dependencias de Python (solo para visión)
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+pip3 install -r requirements.txt
+```
+
+> El servicio de visión (`src/vision/weight_detector.py`) se lanza como proceso hijo desde Node.js. Necesita Python 3 con `flask`, `opencv-python-headless`, `numpy`, `easyocr` y (en Windows) `pygrabber`.
+
+---
+
+## 📜 Scripts disponibles
+
+```bash
+npm run start:dev      # Desarrollo con hot-reload
+npm run start          # Ejecución normal
+npm run start:prod     # Producción (usa dist/)
+npm run build          # Compilar TypeScript → dist/
+npm run lint           # Linter (eslint --fix)
+npm run format         # Formatear con Prettier
+npm run test           # Tests unitarios (Jest)
+npm run test:watch     # Tests en modo watch
+npm run test:cov       # Tests con cobertura
+npm run test:e2e       # Tests E2E
+
+# Migraciones (ejecutadas automáticamente al iniciar)
+npm run migration:run     # Aplicar migraciones
+npm run migration:revert  # Revertir última migración
+```
+
+---
+
+## 👤 Usuarios por defecto
+
+Al iniciar la aplicación, el `SeedService` crea automáticamente estos usuarios:
+
+| Rol | Usuario | Contraseña |
+|---|---|---|
+| Administrador | `Instructor` | `admin123` |
+| Aprendiz | `Aprendiz` | `aprendiz123` |
+| Visitante | `visitante` | `visitante123` |
+
+Para obtener un token de visitante sin credenciales:
+
+```bash
+curl -X POST http://localhost:3000/auth/visitante
+```
+
+---
+
+## 🌐 API Endpoints
+
+### Auth
+```
+POST   /auth/login      → Login con nombre_usuario + password
+POST   /auth/visitante  → Login como invitado
+GET    /auth/profile    → Perfil del usuario autenticado (requiere JWT)
+```
+
+### Módulos CRUD (requieren JWT)
+```
+GET,POST,PUT,DELETE /usuarios
+GET,POST,PUT,DELETE /roles
+GET,POST,PUT,DELETE /razas
+GET,POST,PUT,DELETE /lotes
+GET,POST,PUT,DELETE /galpones
+GET,POST,PUT,DELETE /alimentos
+GET,POST,PUT,DELETE /tipo-de-alimento
+GET,POST,PUT,DELETE /produccion
+GET,POST,PUT,DELETE /movimientos-insumo
+GET,POST,PUT,DELETE /alertas
+GET,POST,PUT,DELETE /muertes
+GET,POST,PUT,DELETE /tratamientos
+GET,POST,PUT,DELETE /reportes
+GET,POST,PUT,DELETE /settings
+```
+
+### Visión (requiere Python)
+```
+POST /vision/start   → Iniciar cámara (body: { cameraIndex: 0 })
+POST /vision/stop    → Detener cámara
+```
+
+---
+
+## 🔧 Tecnologías
+
+- **NestJS 11** — Framework backend
+- **TypeScript 5** — Lenguaje
+- **TypeORM 0.3** — ORM para PostgreSQL
+- **PostgreSQL 14** — Base de datos
+- **JWT / Passport** — Autenticación
+- **bcrypt** — Hash de contraseñas
+- **Docker** — Containerización
+- **Python 3 + OpenCV** — Visión por computadora
+
+---
+
+## 📁 Estructura de base de datos
+
+El proyecto incluye migraciones en `src/migrations/`:
+
+| Archivo | Descripción |
+|---|---|
+| `1782867387441-InitialMigrationAndUUIDSetup.ts` | Migración inicial con UUIDs |
+| `1782868306921-DropEstadoTable.ts` | Elimina tabla `estado` |
+| `1782870058415-UpdateUUIDPrimaryKeys.ts` | Actualiza PKs a UUID |
+| `1783640902738-CreateSettingsTable.ts` | Crea tabla de settings |
+
+Las migraciones se ejecutan **automáticamente** al iniciar la aplicación (`migrationsRun: true` en `app.module.ts`).
+
+---
+
+## 🐳 Docker Compose
+
+El `docker-compose.yml` define dos servicios:
+
+- **`db`** — PostgreSQL 14.3 con datos persistentes en `./postgres/`
+- **`app`** — Aplicación NestJS construida desde el `Dockerfile` (incluye Python3 + dependencias)
+
+El servicio `app` depende de `db` y se conecta a la base de datos mediante el nombre del servicio (`db`) usando comunicación interna de Docker.

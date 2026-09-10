@@ -11,6 +11,15 @@ dist/
 # PostgreSQL
 postgres/
 postgres/**
+postgres_backup/
 
 # Environment
 .env
+!.env.example
+
+# Artillery load tests
+tests-artillery-*/
+
+# IDE/Editor
+.vs/
+.vscode/
