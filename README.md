@@ -1,6 +1,6 @@
-# Senavicola - Backend API
+# Laying Hens - Backend API
 
-Este proyecto es el **Backend** de la plataforma integral de gestión de gallinas ponedoras **Senavicola**. Está desarrollado con **NestJS** y TypeORM, con una base de datos **PostgreSQL** y un microservicio de visión por computadora en **Python** (para el peso de huevos) totalmente integrado en el contenedor de Docker.
+Este proyecto es el **Backend** de la plataforma integral de gestión de gallinas ponedoras **Laying Hens**. Está desarrollado con **NestJS** y TypeORM, con una base de datos **PostgreSQL** y un microservicio de visión por computadora en **Python** (para el peso de huevos) totalmente integrado en el contenedor de Docker.
 
 ## 🏗️ Arquitectura
 
@@ -97,26 +97,6 @@ PORT=3000
 
 > **Importante**: Para Docker, `DB_HOST` debe ser `db` (nombre del servicio en docker-compose). Para desarrollo local, usa `DB_HOST=localhost`.
 
-### Opción 2: Desarrollo local (sin Docker para la app)
-
-```bash
-# 1. Levantar solo PostgreSQL con Docker
-docker-compose up -d db
-
-# 2. Instalar dependencias de Node.js
-npm install --legacy-peer-deps
-
-# 3. (Opcional) Instalar dependencias de Python para visión
-pip3 install -r requirements.txt
-
-# 4. Crear el archivo de configuración con DB_HOST=localhost
-
-# 5. Ejecutar en modo desarrollo (con hot-reload)
-npm run start:dev
-```
-
-> **Nota sobre `--legacy-peer-deps`**: Algunas dependencias del proyecto (`@types/bcrypt`, `bcrypt`) tienen conflictos de versiones con Node 20. El flag `--legacy-peer-deps` resuelve estos conflictos. El `Dockerfile` ya lo incluye por defecto.
-
 ## 🌐 Puertos y Accesos
 
 | Servicio | Puerto | Descripción |
@@ -131,24 +111,6 @@ npm run start:dev
 docker-compose up -d --build          # Levantar todo
 docker-compose down                    # Detener todo
 docker-compose logs -f app             # Ver logs del backend
-
-# Node.js
-npm run start:dev                      # Desarrollo (hot-reload)
-npm run start                          # Ejecución normal
-npm run start:prod                     # Producción (usa dist/)
-npm run build                          # Compilar TypeScript → dist/
-npm run lint                           # Linter (eslint --fix)
-npm run format                        # Formatear con Prettier
-
-# Tests
-npm run test                           # Tests unitarios (Jest)
-npm run test:watch                    # Tests en modo watch
-npm run test:cov                      # Tests con cobertura
-npm run test:e2e                      # Tests E2E
-
-# Migraciones (se ejecutan automáticamente al iniciar)
-npm run migration:run                  # Aplicar migraciones
-npm run migration:revert               # Revertir última migración
 ```
 
 ## 👤 Usuarios de Prueba (semilla automática)
@@ -174,7 +136,7 @@ curl -X POST http://localhost:3000/auth/login \
 curl -X POST http://localhost:3000/auth/visitante
 ```
 
-## 🌐 API Endpoints
+## 📡 API Endpoints
 
 ### Auth
 ```
